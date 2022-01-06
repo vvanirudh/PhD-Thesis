@@ -1,0 +1,296 @@
+
+\chapter{Introduction and Background}
+\label{cha:introduction}
+
+\epigraph{\textit{Remember that all models are wrong; the practical
+    question is how wrong do they have to be to not be
+    useful.}}{George Box (1987)}
+
+\section{Motivation}
+\label{sec:motivation}
+
+Robotic planning algorithms have been widely successful in computing
+feasible and optimal plans, or sequence of decisions, for tasks
+involving robots operating in known environments or under known
+conditions~\cite{DBLP:books/cu/L2006}. A large part of this success
+can be attributed to principled algorithms that effectively
+``search'' the space of all plans by exploiting the known
+structure in the form of dynamical models to quickly compute the
+solution. For example in the field of robot motion planning, there
+have been various developments in designing planning algorithms that
+exploit forward models to effectively discretize the state space into
+a graph and compute a feasible plan using graph search
+techniques~\cite{DBLP:books/daglib/0068760}. This enables planning
+algorithms to guarantee task 
+completeness, which is a requirement on the solution plan to complete
+the task, and be efficient in the amount of computational resources
+needed to find the solution.
+
+However for robots to operate in unstructured environments such as
+homes, offices and disaster sites, planning algorithms have to
+reason about how to deal with the lack of complete knowledge of the
+environment while ensuring task completeness. To retain their
+effectiveness, these planning algorithms will have to utilize partial
+knowledge of the environment and the task in the form of simplified
+and \textit{inaccurate} dynamical models.
+Naively using these inaccurate dynamical models for planning
+can result in highly suboptimal plans and in some cases, plans that do
+not complete the task during execution. An example of such behavior is
+shown in Figure~\ref{fig:intro-example}. In this example, a robotic arm is
+performing a pick-and-place task while avoiding collision with an
+obstacle. In the first scenario (the first three figures from the left
+in Figure~\ref{fig:intro-example},) the arm is interacting with a
+light object whose mass is accurately captured by the dynamical model
+used by the planner. This results in a computed trajectory for the
+arm that grasps the object, lifts it above the obstacle and takes it
+to the goal location. While this scenario has highlighted the
+effectiveness of the planning algorithm to complete the task when
+given access to an accurate dynamical model, consider the second
+scenario (the last figure on the right in
+Figure~\ref{fig:intro-example}) where the arm is interacting with a
+heavy object which is modeled as a light object by the dynamical
+model. Since the model is same as before, the planner computes the
+same trajectory which lifts the object above the obstacle. However,
+while executing the trajectory the arm cannot lift the heavy object and
+cannot command the joint torques required because they are beyond the
+arm's capabilities. Thus, the computed plan is not successful in
+completing the task.
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}{0.24\linewidth}
+    \includegraphics[width=\linewidth]{figures/cmax/pr2_pick_place_light_1_annotated.jpeg}
+  \end{subfigure}
+  \begin{subfigure}{0.24\linewidth}
+    \includegraphics[width=\linewidth]{figures/cmax/pr2_pick_place_light_2_annotated.jpeg}
+  \end{subfigure}
+  \begin{subfigure}{0.24\linewidth}
+    \includegraphics[width=\linewidth]{figures/cmax/pr2_pick_place_light_3_annotated.jpeg}
+  \end{subfigure}
+  \begin{subfigure}{0.24\linewidth}
+    \includegraphics[width=\linewidth]{figures/cmax/pr2_pick_place_heavy_1_annotated.jpeg}
+  \end{subfigure}
+  \caption{A robotic arm picking an object from its start location and
+  placing it at a goal location while avoiding collision with the
+  intermediate obstacle during motion. The first three (from left)
+  figures show an execution with a light object (wooden block) and a
+  plan (blue trajectory) computed
+  using an accurate dynamical model which captures the weight of the
+  object correctly. The last figure (rightmost) shows an instance of
+  the same task but with a heavy object (black dumbbell) and same
+  dynamical model as before which models the object as light. This
+  results in the planner computing the same plan as before, which the
+  robot cannot execute as lifting the heavy object requires joint
+  torques that are beyond the robot's capabilities. Thus, the plan is
+  not task complete.}
+  \label{fig:intro-example}
+\end{figure*}
+The above example highlights the ineffectiveness of naively using
+these inaccurate models for planning. This ineffectiveness can be
+tackled broadly in two directions: updating either the dynamical
+model or the behavior of the planner, using the accumulated
+experience during execution.
+
+The former direction of using online
+experience to update existing dynamical models or learning new
+dynamical models from scratch has been explored in the Reinforcement
+Learning (RL) framework. This framework enables autonomous agents,
+such as robots, to learn how to operate in an unknown environment by
+interacting with it and compute an optimal plan that minimizes total
+cost~\cite{sutton1998introduction}. With partial or no prior knowledge
+about the environment, the agent needs to explore to discover low cost
+actions or regions where dynamics are inaccurately modeled. The
+exploration strategies leveraged by these agents require a large
+amount of interactions with the environment before we can compute
+plans that guarantee task completeness. This is a major reason why RL,
+despite being a very general framework, has mostly seen success in
+domains where we can afford to collect large amounts of interactions
+with little effort: video games and simulations.
+
+Most methods in the RL framework can be categorized as either model-based
+or model-free (Figure~\ref{fig:dyna}). As the name suggests, model-based methods rely on
+using a model as input to a planning procedure to compute the solution
+plan for a given task. These methods use the experience gained online
+during execution to update the dynamics of the model and replan to
+compute a new solution plan~\cite{DBLP:journals/sigart/Sutton91}. In
+contrast, model-free methods directly 
+use the accumulated experience to compute an updated solution plan
+without ever using a dynamical model. These methods utilize the
+experience to estimate value functions, which are esentially
+cost-to-go estimates, and compute a plan using the estimated
+values. Both methods have advantages and disadvantages. Model-based
+methods relatively require fewer amounts of experience to compute a
+plan of the same quality as the plan computed by a model-free
+method. On the other hand, model-free methods are not affected by the biases
+inherent in the design of the model.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{Figures/intro/dyna.pdf}
+  \caption{Operation of Model-based (blue) and Model-Free RL (red) methods
+    while executing in unknown environments and collecting
+    experience to complete a task. Figure inspired from Dyna~\cite{DBLP:journals/sigart/Sutton91}}
+  \label{fig:dyna}
+\end{figure}
+
+In contrast, the latter direction of updating the behavior of the
+planner using online experience has not been explored as extensively
+in past literature. Interestingly, this direction has been explored by
+the practitioner for quite some time. As motivated earlier, in most
+robotic tasks we seldom have access to accurate dynamical models and
+the models we use for planning are often inaccurate. Robotics
+engineers and practitioners have been dealing with these inaccuracies
+by modifying how the planner uses the inaccurate model rather than
+updating the model to improve its accuracy. As an example, consider
+the task of planning footsteps of a mobile quadruped robot over
+partially unknown terrain as shown in Figure~\ref{fig:zucker} taken
+from \cite{DBLP:journals/ijrr/ZuckerRSCBAK11}. The
+unknown part of the terrain is annotated in the figure (red oval.) To
+ensure that the planner does not compute footstep trajectory that goes
+through this region, a simple
+hack that the practitioner does is to inflate the cost of any
+state-action pair that takes the robot into this region. This results
+in biasing the planner away from this region thereby updating its
+behavior. There are several other example applications where the
+practitioner deals with inaccurate modeling by simply updating the
+behavior of the planner. While this direction has been explored by the
+practitioner, there is very little prior work that has studied this
+direction from a theoretical point of view aiming to understand the
+assumptions required to guarantee task completeness, and a systematic
+study to analyze its empirical performance in practice. Our thesis
+aims to fill this gap and develop a better understanding when, where
+and how these methods work well in practice.
+
+\section{Thesis Goal and Contributions}
+\label{sec:thes-goal-contr}
+
+While most existing works have presented and studied approaches that
+use the experience from executions to update the dynamics of the
+inaccurate model, one can argue that this is wasteful if we are interested in
+completing the task and not in modeling the dynamics
+accurately. Furthermore, robots operating in the real world have
+operating constraints that require them to quickly adapt to
+new scenarios and not spend hours acquiring experience to learn true
+dynamics. In such spirit, our main focus in this thesis is to argue that by updating the
+behavior of the planner and not the dynamics of the model, we can
+leverage simplified and potentially inaccurate models and
+significantly reduce the amount of real-world experience needed to
+provably guarantee that the robot completes the task.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{Figures/intro/zucker}
+  \caption{A practitioner's approach to dealing with inaccuracies in
+    dynamical models used for planning. In this example, the robot is
+    planning a footstep trajectory along the partially unknown terrain
+  to reach the other side. The planner has access to a model of the
+  terrain which is inaccurate in the regions marked by red oval. To
+  ensure that the planner does not compute any trajectory going
+  through the red oval region, practitioners typically inflate the
+  cost of any action executed within the region or any action that
+  takes the robot into this region. This results in biasing the
+  planner away from this region thereby updating its behavior. Figure
+  taken from \cite{DBLP:journals/ijrr/ZuckerRSCBAK11} and the red oval
+  region depicted is an example used for emphasis.}
+\label{fig:zucker}
+\end{figure}
+
+We support this argument by presenting two methods that update the
+behavior of the planner and do not require any updates to the dynamics
+of the inaccurate model used for planning.  Both methods come with
+provable guarantees on completing the task under assumptions on the
+accuracy of the model. In addition to these methods, we also emphasize
+the importance of using model-based planning
+by analyzing the sample complexity (or the amount of experience
+needed) of exploration techniques used in model-free RL methods. Our
+analysis shows that undirected global exploration techniques popularly
+used in model-free RL methods can result in large sample complexity
+requirements that cannot be realized in practice on a robot.
+
+The primary contributions of this thesis can be detailed as follows.
+
+\subsection{Sample Complexity of Exploration in Model-Free Policy
+  Search}
+\label{sec:sample-compl-expl}
+We analyze the sample complexity of exploration techniques in
+  model-free RL methods. This analysis is presented by viewing model-free policy
+  search methods through the lens of derivative-free optimization (DFO)
+  and computing upper bounds on the number of samples
+  required to compute a $\epsilon$-suboptimal policy. We present a DFO
+  point of view for methods that involve either exploration in action
+  space or exploration in policy space, and present trade-offs between
+  both styles of exploration in terms of the dimensionality of the
+  policy parameter space, and the horizon length of the task. This
+  analysis is presented in Chapter~\ref{cha:sample-compl-expl} of the  
+  thesis and is also presented in our paper~\cite{aistats19}. In addition
+  to contrasting exploration in policy space vs action space, this
+  work also emphasizes the large sample complexity required by
+  model-free methods, which cannot be realized in practice on a robot.
+  
+\subsection{Planning and Execution using Inaccurate Models}
+\label{sec:plann-exec-using}
+  We present the first systematic effort to understand methods
+  that use online experience from executions to update the behavior of
+  the planner and not update the dynamics of the model. Thus, these
+  methods can make progress towards completing the task despite using
+  a potentially inaccurate model. One can construct cases where if the
+  model is highly inaccurate (e.g. a model that predicts a humanoid
+  falling down for any action and failing to complete the task of
+  moving forward,) then such a method cannot be expected to finish the
+  task. Hence, we study the assumptions required on the accuracy of
+  the model used for planning that ensures task completeness without
+  requiring any updates to the dynamics of the model. Furthermore, we
+  frame our problem in the purely online setting where the experience
+  gathered by the robot is along a single trajectory without any
+  access to resets. We believe that this setting is realistic and has
+  challenges that these methods are uniquely positioned to tackle.
+
+  We propose \cmax{}, an approach that guarantees that the robot
+  completes the task using the inaccurate model without any resets and
+  without requiring any updates to the dynamics of the model. This is
+  achieved by biasing the planner away from transitions whose dynamics
+  are discovered to be inaccurately modeled during online
+  execution. On the theoretical side, we establish provable guarantees
+  on task completeness under assumptions on the accuracy of the model
+  used for planning. Empirically, we show that \cmax{} outperforms
+  state-of-the-art model-free and model-based RL methods in terms of
+  the number of executions taken to complete the task. Crucially,
+  \cmax{} exhibits goal-driven behavior which enables it to focus on
+  completing the task as quickly as possible and not waste executions  
+  learning the true dynamics. This method is explained in detail in
+  Chapter~\ref{cha:plann-exec} and is also presented in our
+  paper~\cite{cmax}.
+
+\subsection{Leveraging Experience in Planning and Execution using
+  Inaccurate Models}
+\label{sec:lever-exper-plann}
+  
+While a robot using \cmax{} is provably guaranteed to complete
+  the task, it requires strong assumptions on the accuracy of the
+  model that are often not realized in practice and hard to verify
+  prior to execution. In addition for repetitive tasks, \cmax{} fails
+  to improve the quality of the solution over repetitions of the same
+  task as it does not leverage previously discovered inaccurately
+  modeled transitions. This is remedied by our second approach
+  \cmaxpp{} that leverages experience from past executions to improve
+  the quality of solution over repetitions of the same
+  task. Crucially, unlike \cmax{}, \cmaxpp{} can compute solution
+  plans that contain previously discovered inaccurately modeled
+  transitions. \cmaxpp{} achieves this by integrating model-free value
+  learning using acquired experience with model-based planning using
+  the inaccurate model. As a consequence of this in addition to
+  completeness, \cmaxpp{} also guarantees asymptotic convergence to
+  the optimal path cost as the number of repetitions increases. These
+  guarantees of \cmaxpp{} are established under assumptions on the
+  accuracy of the model that are much more relaxed compared to the
+  assumptions required by \cmax{}. Importantly, like \cmax{},
+  \cmaxpp{} never updates the dynamics of the model. This method is
+  explained in detail in Chapter~\ref{cha:lever-exper} and is also 
+  presented in our paper~\cite{cmaxpp}.
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

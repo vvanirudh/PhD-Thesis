@@ -1,0 +1,409 @@
+\chapter{Background}
+\label{cha:background}
+
+\epigraph{\textit{If I have seen further it is by standing on the
+    shoulders of Giants.}}{Isaac Newton (1676)}
+
+In this chapter, we provide background knowledge with the aim of
+introducing classical techniques
+that we will use throughout this thesis. Each chapter of this thesis
+is self-contained and has detailed definitions that are more tailored
+to the specific problem tackled in each chapter.
+
+\section{Fundamentals of Markov Decision Processes}
+\label{sec:fund-mark-decis}
+
+In this thesis, we will primarily deal with finite horizon problems
+where the objective is for an agent to minimize cumulative cost incurred over a
+horizon of finite length. This is typically formulated as a finite horizon Markov
+Decision Process (MDP)~\cite{bellman} that is represented as
+$(\statespace, \actionspace, P, c, H)$ where $\statespace$ is the set
+of states that the agent can be in, $\actionspace$ is the set of
+actions that the agent can execute, $P$ is the transition dynamics
+such that for any $s_t \in \statespace$, $s_{t+1} \in \statespace$,
+$a_t \in \actionspace$, $P(s_{t+1}|s_t, a_t)$ is the probability of
+transitioning to state $s_{t+1}$ from state $s_t$ by taking action
+$a_t$, $c$ is the cost function such that for any transition $(s_t,
+a_t)$, $c(s_t, a_t)$ is the cost incurred for that transition, and $H
+\in \mathbb{N}^+$ is the length of the horizon. Typically, this
+formulation also has a discounting factor $\gamma$ and a initial state
+distribution $\rho$. In this thesis, we consider the non-discounted
+setting where $\gamma = 1$ and a fixed initial state $s_0$ that is
+known (thus, $\rho$ is a delta distribution on $s_0$.)
+
+A deterministic policy $\pi: \statespace \rightarrow \actionspace$
+maps from a state to an action. Given $\pi$ and a time step $t$, we can define the 
+cost-to-go or value estimate $V_\pi^t(s)$ as follows:
+\begin{equation}
+  \label{eq:3}
+  V_\pi^t(s) = \mathbb{E}\left[ \sum_{i=t}^H c(s_i, a_i) | a_i =
+    \pi(s_i), s_{i+1} \sim P_{s_i, a_i}, s_t = s \right]
+\end{equation}
+where $P_{s_i, a_i} = P(\cdot|s_i, a_i)$ is a distribution over the
+next state.
+
+Similarly, we can also define the state-action value estimate
+$Q_\pi^t(s, a)$ as follows:
+\begin{equation}
+  \label{eq:4}
+  Q_\pi^t(s, a) = c(s, a) + \mathbb{E}_{s' \sim P_{s,a}}[V_\pi^{t+1}(s')]
+\end{equation}
+
+The objective function $J(\pi)$ is defined as
+\begin{equation}
+  \label{eq:6}
+  J(\pi) = V_\pi^0(s_0)
+\end{equation}
+and the goal is to find a policy from a given policy set $\Pi$ that
+minimizes the above objective function.
+
+If the cost function and the transition dynamics is known, then one
+can compute the optimal policy using Dynamic Programming (DP.) Denote
+the optimal policy using $\pi^*$. Define $Q_{\pi^*}^{H-1}(s, a) = c(s,
+a)$, we perform DP as follows: Starting from $t = H-2$ until $t = 1$
+we iteratively do
+\begin{align}
+%  \label{eq:7}
+  V_{\pi^*}^t(s) &= \max_{a \in \actionspace} Q_{\pi^*}^t(s, a) \\
+  Q_{\pi^*}^{t-1}(s, a) &= c(s, a) + \mathbb{E}_{s' \sim P_{s, a}}[V_{\pi^*}^t(s')]
+\end{align}
+Given $Q_{\pi^*}^t$ we can compute the optimal action at time step $t$
+and state $s_t$ 
+as $\min_{a \in \actionspace} Q_{\pi^*}^t(s_t, a)$. The above
+iterative process is called as Value Iteration. This iterative
+procedures is derived by observing that the value function of the
+optimal policy satisfies the following fixed point equation
+\begin{equation}
+  \label{eq:8}
+  V_{\pi^*}^t(s) = \min_{a \in \actionspace} \left( c(s, a) + \mathbb{E}_{s'
+  \sim P_{s,a}}[V_{\pi^*}^{t+1}(s')]\right)
+\end{equation}
+The above equation is known as the Bellman optimality condition.
+
+\section{Deterministic Shortest Path Problem}
+\label{sec:determ-short-path}
+
+The shortest path problem is to find among all paths that start at a
+given state and end at a goal state, a path has the minimum cost; this
+is also called a shortest path~\cite{bertsekas1995neuro}. This can be instantiated as a markov
+decision process represented using the tuple $(\statespace,
+\actionspace, \goalspace, f, c)$ where $\goalspace \subseteq
+\statespace$ is the set of goal states, and $f:\statespace \times
+\actionspace \rightarrow \statespace$ is a deterministic
+dynamics function that determines the successor state $s_{t+1}$ of a
+transition $(s_t, a_t)$ as $f(s_t, a_t)$. The goal states in
+$\goalspace$ are cost-free termination states, i.e. $f(g, a) = g$, $c(g,
+a) = 0$ for
+all $g \in \goalspace$ and any action $a \in \actionspace$. We also
+assume that the cost of any transition starting from a non-goal state
+is positive, i.e. $c(s, a) > 0$ for all $s \in \statespace \setminus
+\goalspace$ and $a \in \actionspace$.
+
+We are interested in problems where reaching the termination state is
+inevitable, at least under an optimal policy. Thus, the essence of the
+problem is how to reach a goal state with minimum cost. In the
+shortest path problem setting, we use $V(s)$ to denote the cost-to-go
+(or value) estimate of any state $s \in \statespace$ and $V^*(s)$ to
+denote the optimal cost-to-go (or value.) From the Bellman optimality
+condition we know
+\begin{equation}
+  \label{eq:9}
+  V^*(s) = \min_{a \in \actionspace}\left( c(s, a) + V^*(f(s, a)) \right)
+\end{equation}
+A value estimate $V$ is called admissible if underestimates the
+optimal value at all states, i.e. $V(s) \leq V^*(s)$ for all $s \in
+\statespace$. Furthermore, $V$ is called consistent if it satisfies
+the condition that for any state-action pair $(s, a)$, $s \notin
+\goalspace$, $V(s) \leq c(s, a) + V(f(s, a))$ and $V(g) = 0$ for all
+$g \in \goalspace$.
+A typical assumption made in all shortest path problems is that there
+exists at least one path from each state $s \in \statespace$ to one of
+the goal states in $\goalspace$. This ensures that the optimal value
+for any state is finite.
+
+\section{Real-time Heuristic Search}
+\label{sec:real-time-heuristic-1}
+
+A traditional way to solve the shortest path problem is to search the
+graph constructed using a mental model of the world, and then
+subsequently execute the resulting plan (or follow the computed path.)
+Thus, planning and execution are completely separated. An alternative
+way of solving this problem is to search online by interleaving
+planning and execution which results in several advantages with the
+major advantage being drastic reductions in planning time. This is
+achieved by performing search locally until a fixed horizon (or until
+a fixed number of states are expanded,) and then execute the best
+action for the current state. After the execution, planning is
+performed once again to find the next best action. This can decrease
+the time used for planning as we are not planning all the way to the
+goal. Another significant advantage is when the mental model of the
+world is inaccurate, these methods enable the agent to update its
+model and ensure future replanning results in more optimal paths.
+
+Since the future consequences of executed actions are unknown,
+interleaving planning and execution can result in slight overhead in
+terms of the number of actions executed but this is often a much
+smaller overhead compared to the reduced planning time. Real-time
+search methods are methods that interleave planning and execution by
+searching forward from the current state of the agent. Most
+importantly, real-time heuristic search methods can satisfy hard
+real-time requirements in large state spaces since the sizes of their
+local search spaces are independent of the sizes
+of the state spaces and can thus remain small.
+
+\subsection{LRTA*}
+\label{sec:lrta}
+
+In this thesis, we will focus on Learning real-time A* (LRTA*) real-time search methods
+that are real-time search methods that associate information with the
+states to prevent cycling. These methods are promising for
+interleaving planning and execution as they are efficient
+domain-independent search methods that allow fine-grained control over
+how much planning is allowed between executions, use heuristic
+knowledge to guide planning, and improve their performance over time
+as they solve similar planning tasks. LRTA* operates on deterministic
+domains only.
+
+\begin{algorithm}[t]
+  \caption{LRTA* with Lookahead $1$~\cite{DBLP:journals/ai/Korf90}}
+  \begin{algorithmic}[1]
+    \State $s \leftarrow s_0$
+    \While{$s \notin \goalspace$}
+    \State Compute action $a = \argmin_{a \in \actionspace} \left( c(s, a) +
+      V(f(s, a)) \right)$
+    \State Update $V(s) \leftarrow \min\left( V(s), c(s, a) + V(f(s,
+      a)) \right)$
+    \State Execute action $a$ and update $s \leftarrow f(s, a)$
+    \EndWhile
+  \end{algorithmic}
+  \label{alg:lrta}
+\end{algorithm}
+
+Algorithm~\ref{alg:lrta} presents the LRTA* algorithm for a lookahead
+or search horizon of $1$. At each time step, the algorithm looks one
+action execution ahead and always greedily chooses the action that
+leads to a successor state with the minimum sum of cost of
+transitioning into the successor state and the value estimate of the
+successor state. Furthermore unlike classical real-time search
+methods, LRTA* also updates the value estimates of the current state
+to reflect the updated estimate of the best path to the goal so that
+future replanning is more efficient. The planning time of LRTA*
+between executions is linear in the number of actions. If the size of
+action space is independent of the size of state space, then the
+planning time is independent of the size of state space which is a
+major improvement over offline planning methods whose computational
+complexity is at most the size of the state space.
+
+LRTA* can be viewed as a form of asynchronous incremental dynamic
+programming method~\cite{DBLP:journals/ai/BartoBS95}. It can be shown
+that LRTA* is guaranteed to reach a goal state in a finite number of
+executions and if we reset to the start state after reaching the goal
+state, then the value estimates eventually converge to the optimal
+value function~\cite{DBLP:journals/ai/Korf90}. These guarantees hold
+under the assumption that the initial value estimates that we start
+with are admissible and consistent. These assumptions are very similar
+to the traditional definitions of admissible and consistent heuristic
+values for A* search. Note that zero-initialized value estimates are
+both admissible and consistent.
+
+\subsection{RTAA*}
+\label{sec:rtaa}
+
+Real-time Adaptive A* (RTAA*) proposed
+in~\cite{DBLP:conf/atal/KoenigL06} is similar to LRTA*
+(Algorithm~\ref{alg:rtaa}). They only 
+differ in the way they update the
+value estimates at each time step. To understand this better, let us
+look at how LRTA* updates value estimates. LRTA* replaces the value
+estimate of each expanded state with the sum of costs of from the
+state to a generated but unexpanded state $s$ (leaf node in the search
+tree) and the value estimate of state $s$, minimized over all
+generated but unexpanded states (all leaf nodes of the search tree.)
+If we denote $V$ as the value estimates after all the value
+updates then the LRTA* updates satisfy the following system of
+equations for all expanded states $s$:
+\begin{equation}
+  \label{eq:10}
+  V(s) = \min_{a \in \actionspace}\left( c(s, a) + V(f(s, a)) \right)
+\end{equation}
+
+\begin{algorithm}[t]
+  \caption{RTAA* with lookahead $K \geq 1$~\cite{DBLP:conf/atal/KoenigL06}}
+  \begin{algorithmic}[1]
+    \State $s \leftarrow s_0$
+    \While{$s \notin \goalspace$}
+    \State Construct a search tree at $s$ until $K$ expansions
+    \State Estimate $\bar{s}$ as the leaf node with the least $g + V$
+    estimate among all leaf nodes
+    \For{all expanded states $s'$}
+    \State Update $V(s') \leftarrow g(\bar{s}) + V(\bar{s}) - g(s')$
+    \EndFor
+    \State Compute action $a$ as the first action on the path from
+    state $s$ to state $\bar{s}$ in the search tree
+    \State Execute action $a$ and update $s \leftarrow f(s, a)$
+    \EndWhile
+  \end{algorithmic}
+  \label{alg:rtaa}
+\end{algorithm}
+
+On the other hand, RTAA* constructs a search tree very similar to
+LRTA* (the number of states expanded is equal to the lookahead) but
+updates the value estimates for all expanded states $s$ as follows:
+\begin{equation}
+  \label{eq:11}
+  V(s) = g(\bar{s}) + V(\bar{s}) - g(s)
+\end{equation}
+where $g(s)$ encodes the cost-to-come from the root of the search tree
+to the state $s$ (i.e. sum of costs of all transitions on the path
+from root to state $s$,) and $\bar{s}$ is the state corresponding to
+the leaf node with the least sum of $g$ and $V$ among all leaf nodes
+in the search tree. In other words, $\bar{s}$ is the state that was
+about to be expanded just before the search was terminated. One can
+show that LRTA* and RTAA* updates are exactly the same when the
+lookahead is $1$. But when the lookahead is greater than $1$, these
+updates differ. More specifically, LRTA* updates tend to be more
+informed or reflect the optimal cost-to-go better when compared to
+RTAA* updates. However, it takes LRTA* more time to update the value
+estimates and is difficult to implement. This is because LRTA*
+performs one search to determine the local search space and a second
+search to determine how to update the value estimates since it is
+unable to use the results from the first search for this
+purpose. Thus, there is a trade-off between the total search time and
+cost of the resulting path. In practice, for lookaheads greater than
+$1$, RTAA* tends to compute solution paths that have higher costs
+compared to LRTA* but the time taken for planning before each execution is
+significantly less in RTAA* compared to LRTA*. This makes RTAA*
+desirable in applications where planning is slow but actions can be
+executed fast and there is a very strict time limit per search episode.
+
+\section{Local Function Approximation Methods}
+\label{sec:local-funct-appr-1}
+
+The goal of function approximation methods is to capture the
+underlying relationship between input and output data. A typical
+approach is to use all the training data to fit a global model that
+predicts the output given the input throughout the input space. The
+hope is that this approximation predicts output values that are close to the
+true output values of the original function. A major disadvantage of
+these global function approximation methods is that in many cases,
+there exists no parameter values that provide a sufficiently good
+approximation. Moving to a larger function approximation class with
+more parameters requires a significantly larger training data which
+might not be available. Furthermore, in cases where the model needs to
+be updated incrementally, the computational cost of recomputing the
+global function approximation is very high and potentially infeasible
+on real-time systems.
+
+An alternative to global function approximation methods are local
+function approximation methods such as Locally Weighted Learning
+(LWL)~\cite{DBLP:journals/air/AtkesonMS97a,
+  DBLP:journals/air/AtkesonMS97}. LWL methods are 
+non-parametric and prediction is computed using local functions which
+use only a subset of the training data. The basic idea of LWL is for
+each query point, a local model is constructed based on
+neighboring training data. Each data point is associated with a
+weighting factor that captures the influence of the data point in
+computing the prediction for the query point. Intuitively, the closer
+the data point to the query point the higher its influence. Since the
+training data is directly used during prediction and there is no
+pre-processing before prediction, LWL can be a very accurate and fast
+incremental function approximation method.
+
+For ease of exposition, let us consider the following regression
+model
+\begin{equation}
+  \label{eq:12}
+  y = f(\xbold) + \epsilon
+\end{equation}
+
+where $f(\xbold)$ is the unknown function that we are seeking to
+approximate, $\xbold \in \mathbb{R}^d$, $y \in \mathbb{R}$ and
+$\epsilon$ is zero mean noise. Given a dataset
+$\buffer = \{(\xbold_i, y_i)\}_{i=1}^N$ and a query point $\xbold_q$ we can define
+the following cost function,
+\begin{equation}
+  \label{eq:13}
+  J(\beta_q) = \frac{1}{N}\sum_{i=1}^N w_i(\xbold_q)(y_i - \betabold_q^T\xbold_i)^2
+\end{equation}
+where $w_i$ are weights that capture the influence of the $i$-th data
+point $(\xbold_i, y_i)$ on the prediction for query point $\xbold_q$, and
+$\betabold_q$ is the coefficients for our linear model that is used for
+prediction. The goal is to find $\betabold_q$ that minimizes the above
+cost function and predict $\hat{y}_q = \betabold_q^T\xbold_q$ (Assume
+that $\xbold_i, \xbold_q$ vectors have a $1$ added to account for the
+offset term.) The weights $w_i(\xbold_q)$ are computed typically using
+a distance metric $d(\xbold_i, \xbold_q)$ that captures relevance of
+training points to the query point, and a kernel function $K(d)$ which
+computes the weight given a distance value.
+
+\subsection{K-Nearest Neighbor Regression}
+\label{sec:k-nearest-neighbor}
+
+A very simple LWL method is K-Nearest Neighbor (KNN) regression which
+given a query point $\xbold_q$ finds the $K$ nearest neighbors in the
+training data $\buffer$ using a distance metric $d(\xbold_q,
+\xbold_i)$. There are several variants of this method, one of which
+uniformly weights all the $K$ nearest neighbor's outputs to obtain the
+prediction for the query point, i.e.
+\begin{equation}
+  \label{eq:14}
+  \hat{y}_q = \frac{1}{K} \sum_{\xbold_i \in \buffer_K(\xbold_q)} y_i
+\end{equation}
+where $\buffer_K(\xbold_q)$ represents the set of size $K$ consisting
+of the $K$ nearest neighbors of the query point $\xbold_q$ in
+$\buffer$. Another variant, which often works well in practice, is to
+weigh each neighbor by the inverse of their distance to the query
+point. Intuitively, closer neighbors have a greater influence than
+farther neighbors. Thus, we have
+\begin{equation}
+  \label{eq:15}
+  \hat{y}_q = \frac{\sum_{\xbold_i \in \buffer_K(\xbold_q)} w_iy_i}{\sum_{\xbold_i \in \buffer_K(\xbold_q)} w_i}
+\end{equation}
+where the weight $w_i = \frac{1}{d(\xbold_q, \xbold_i)}$ is the
+inverse of distance to the query point. KNN regression requires
+storing all the training data in memory in the form of K-d trees which
+allow very fast computation of $K$ nearest neighbors.
+
+\subsection{Locally Weighted Regression}
+\label{sec:locally-weight-regr}
+
+Locally weighted regression (LWR) is a locally weighted learning
+method that maintains all the training data in memory and quickly
+computes the prediction for any given query point. LWR is presented in
+Algorithm~\ref{alg:lwr} which is executed once for each query point
+$x_q$. There are also simple extensions to the batch setting where we
+want to obtain predictions for a batch of query points. The only
+hyperparameter is the matrix $D$ which is usually set to a scaled
+identity matrix $D = h\mathbb{I}$ where $h$ is a scalar hyperparameter
+that is chosen using cross validation. LWR typically has a very high
+approximation accuracy due to its local nature and has only few
+hyperparameters. The disadvantage is that Algorithm~\ref{alg:lwr} has
+a computational complexity of $\mathcal{O}(N^2)$ where $N$ is the size
+of training data, which can be very expensive for large
+datasets. Furthermore, LWR requires you to store all the training data
+in memory which might be infeasible for extremely large datasets.
+
+\begin{algorithm}[t]
+  \caption{Locally Weighted Regression}
+  \begin{algorithmic}[1]
+    \State \textbf{Input:} Training data $\buffer = \{(\xbold_i,
+    y_i)\}_{i=1}^N$, Query point $\xbold_q$
+    \State Construct matrix $X$ with rows corresponding to $\hat{\xbold}_i$
+    where $\hat{\xbold}_i = [\xbold_i^T 1]^T$
+    \State Construct vector $\ybold$ with each element corresponding
+    to $y_i$
+    \State Compute diagonal weight matrix $W$ where the $i$-th
+    diagonal element is given by $\exp\left( -\frac{1}{2} (\xbold_i -
+      \xbold_q)^TD(\xbold_i - \xbold_q) \right)$
+    \State Compute $\beta_q = (X^TWX)^{-1}X^TW\ybold$
+    \State Compute prediction $\hat{y}_q = \beta_q^T\hat{\xbold_q}$
+    where $\hat{\xbold_q} = [\xbold_q^T 1]^T$
+  \end{algorithmic}
+  \label{alg:lwr}
+\end{algorithm}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

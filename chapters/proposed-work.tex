@@ -1,0 +1,385 @@
+\chapter{Proposed Work}
+\label{cha:proposed-work}
+
+\epigraph{\textit{More work is needed before planning with learned
+    models can be effective. Environment models should be
+    constructed judiciously with regard to both their states and
+    dynamics with the goal of optimizing the planning process.}}{Rich
+  Sutton and Andrew Barto (2018)}
+
+The algorithms presented in this thesis, so
+far, have not required any updates to the dynamics of the model. In
+contrast, most existing methods in the literature, such
+as~\cite{DBLP:journals/ml/KearnsS02, DBLP:journals/jmlr/BrafmanT02,
+  DBLP:conf/atal/JongS07, 
+  DBLP:journals/pami/DeisenrothFR15, DBLP:conf/icml/AbbeelQN06, 
+  DBLP:conf/aaai/Jiang18, rastogi2018sample}, use experience
+acquired from executions to update the dynamics of the model or learn
+a model from scratch.
+Chapters~\ref{cha:plann-exec} and~\ref{cha:lever-exper} have
+argued that updating the dynamics of the model requires a large amount
+of experience in large state spaces and can be at the expense of
+completing the task. While this is generally true, there are major
+advantages of updating the dynamics of the model, especially in
+domains where it 
+is feasible to do it online, as it allows the planner to compute
+solutions that exploit the true dynamics and potentially result in
+solutions with very low costs. Furthermore even in application domains
+where we require a large amount of experience to update the model,
+the improvement in task performance from planning on a more accurate
+model can outweigh the executions wasted to learn true dynamics. For
+example, there might be regions in the state space where updating the
+dynamics of the model can be done efficiently while in other regions
+we can resort to methods that update the behavior of planner such as
+\cmax{} and \cmaxpp{}. This motivates a trade-off between both sets of
+approaches and understanding this trade-off can result in intelligent
+use of online experience to achieve efficient planning and
+execution. The first part of proposed work studies this trade-off
+and aims to create a unified framework combining the best of both
+sets of approaches.
+
+In this thesis, we are also interested in studying the task
+performance one can obtain using inaccurate models without
+updating the dynamics of the model online. So far, we have presented
+algorithmic contributions in Chapters~\ref{cha:plann-exec}
+and~\ref{cha:lever-exper} that provide evidence that we can achieve 
+good empirical performance without requiring any updates to the
+model. However, we have mostly
+restricted ourselves to the discrete setting where one can perform
+optimal planning procedures and establish asymptotic guarantees, but
+cannot perform any fine-grained analysis. More specifically, we would
+like to answer the following question, \textit{What task performance
+  can we expect using an inaccurate model with a finite amount of
+  experience?} Our guarantees, so far, do not tackle this
+question as they are asymptotic in nature. Moving to a continuous
+setting allows us to perform such fine-grained analysis and establish
+bounds on the task performance as a function of the amount of
+experience. The second part of proposed work aims to answer the above
+question in the setting of continuous linearized systems with convex
+costs and model uncertainty.
+
+\section{Combining Model Learning with Updating Behavior of Planner}
+\label{sec:updat-dynam-model}
+
+In the first part of our proposed work, we aim to combine the advantages of
+existing methods that update the dynamics of the model, and methods
+presented in this thesis that update the behavior of the planner, like
+\cmax{} and \cmaxpp{}. The goal is to create a unified framework where
+the robot, during the course of its execution, deals with the
+inaccuracy in the dynamical model and completes the task by
+intelligently switching between: 
+\begin{enumerate}
+\item Learning the true dynamics and updating the model
+\item Learning a model-free estimate of the value function for
+  inaccurately modeled transitions
+\item Biasing the planner away from inaccurately modeled transitions
+  by inflating their cost
+\end{enumerate}
+
+In the next few sections, we outline the challenges in creating such a
+unified framework and present initial ideas that are promising to
+explore.
+
+\subsection{Local Incremental Modeling}
+\label{sec:local-modeling}
+
+Foremost among them is data efficiency. In the online setting, the
+robot acquires training data for learning the true dynamics through
+executions. To learn a good approximation of the true dynamics, we
+require a large number of samples especially in high-dimensional state
+spaces. On the other hand, the robot's goal is to complete the task
+quickly without wasting executions. Thus, the objective of learning
+true dynamics can be in conflict with the objective of completing the
+task resulting in a trade-off between using online executions to learn
+true dynamics and completing the task.
+
+Most existing works in the model-based
+reinforcement learning literature use a global function
+approximator to learn the true dynamics from scratch. However, as
+evidenced by our experiments in Chapters~\ref{cha:plann-exec}
+and~\ref{cha:lever-exper}, global function approximators such as
+neural networks require a large amount of executions before they can
+approximate the true dynamics well enough to complete the task. In
+contrast, local function approximation methods such as the ones
+described in Section~\ref{sec:local-funct-appr-1} operate well in the
+regime of less data, approximate the dynamics with higher accuracies, and are more
+amenable to incremental online implementations. Classical works such as
+LWR~\cite{DBLP:journals/air/AtkesonMS97},
+LWPR~\cite{DBLP:conf/icml/VijayakumarS00} and more recent works such
+as LGR~\cite{DBLP:journals/corr/MeierHS14} and incremental
+LGR~\cite{DBLP:conf/nips/MeierHS14} have shown empirical success in
+learning inverse dynamics online for torque
+control. Our experiments in Chapters~\ref{cha:plann-exec} and~\ref{cha:lever-exper}
+using the model KNN baseline, which is a local modeling method, have
+provided early indications to the efficacy of these local modeling
+methods. The success of these local modeling methods motivates us to
+use similar methods in learning forward dynamics online. 
+
+\subsection{Task-Aware Model Learning}
+\label{sec:task-driven-learning}
+
+A general approach to estimate the true dynamics is to frame it as a
+regression problem where the loss function is typically the L$2$ norm
+prediction error. For example, given a state $s \in \statespace
+\subset \mathbb{R}^d$
+and action $a \in \actionspace$,
+if the true successor is $s' \in \statespace$ and the function
+approximator class is parameterized by $\theta$ then the objective is
+to minimize the following loss function
+\begin{equation}
+  \label{eq:16}
+  \mathcal{L}(\theta) = \|s' - \hat{f}(s, a; \theta)\|_2^2
+\end{equation}
+where $\hat{f}$ is the function approximator. In stochastic dynamics
+setting, a popular way to estimate the stochastic transition matrix is
+to use maximum likelihood estimation (MLE.)
+
+The common practice in model-based reinforcement learning is to
+seperate the task of learning the dynamical model from its use in
+planning. One can argue that the goal of learning the model is not in
+optimizing prediction error as given in \eqref{eq:16}, but to learn
+models that are directly useful for planning. It might be the case
+that some aspects of the environment dynamics are irrelevant to find a
+good plan. Thus, it is desirable to have a model learning procedure
+that takes the planning problem into account and is more
+task-aware.
+
+Furthermore in real world domains it is often the case
+that the function approximator class used is unable to capture the
+true dynamics, either due to a small function class or the true
+dynamics being extremely complex. In such cases, even with unlimited
+amount of experience and computation, there is no guarantee that the
+model with the least prediction error leads to a plan that completes
+the task successfully. This motivates moving away from using
+prediction error as the model selection metric to using a
+task-specific metric that selects a model which results in plans that
+complete the task.
+
+Recent work such as~\cite{DBLP:conf/aistats/FarahmandBN17,
+  Farahmand2018} have explored designing loss functions for model
+learning that result in models which are useful for their subsequent
+use in value-based planning. This line of work has been taken further
+by~\cite{grimm2020value} establishing the value equivalence principle
+which states that two models are equivalent with respect to a set of
+function class if they yield the same Bellman updates. They illustrate
+that by leveraging the value equivalence principle one may find
+simpler models without compromising task performance, saving both
+computation and memory. Another very relevant
+work~\cite{DBLP:conf/icra/JosephGRHR13} presents a simple algorithm
+that selects the model which achieves the highest expected reward, and
+not the lowest prediction error. The algorithm guarantees that the
+highest performing model from the function approximator class can be
+found given unlimited data and computation.
+
+In our online no-reset setting, it is extremely important to use the
+limited data available to optimize for task completion rather than
+minimizing prediction error. A naive way to achieve this is to
+consider a weighted prediction error loss function that weights each
+transition according to the usefulness of it for future replanning
+queries. This enables us to build better models with less data and
+without compromising task performance.
+
+\subsection{Guaranteeting Task Completeness}
+\label{sec:guar-task-compl}
+
+During the process of updating the dynamics of the model, the
+resulting model can have approximation errors that result in violating
+assumptions required to guarantee task completeness. Most of the prior
+works present such guarantees under an idealistic assumption of no
+approximation errors which cannot be realized in practice. In our
+proposed algorithm, we would like to retain the task completeness
+guarantees despite the presence of approximation errors in the updated
+dynamical model.
+
+\subsection{Switching Between Model Learning and Updating
+  Planner Behavior}
+\label{sec:switch-betw-cmax}
+
+To achieve our goal of combining advantages of methods that update the
+dynamical mdoel online and methods that update the behavior of the
+planner, we need an intelligent strategy to switch between these
+methods during execution. An example of a switching strategy has
+been presented in Section~\ref{sec:adaptive} where we presented an
+algorithm that switches between \cmax{} and \cmaxpp{}. The goal is to
+design a similar algorithm that switches between updating the model,
+\cmax{} and \cmaxpp{}, with the objective of optimizing task
+performance. This involves explicitly reasoning about when it is more
+useful to simply bias the planner away from inaccurately modeled
+regions and find alternative paths, versus when it is useful to learn
+the true dynamics and update the model or learn the true value
+function using a model-free update.
+
+\section{Robust Control in Continuous Linearized Systems with Model
+  Uncertainty}
+\label{sec:robust-contr-cont}
+
+In the second part of our proposed work, we study a simple
+continuous control setting that is easy to analyze and provides
+insights into the performance one can expect from using an approximate
+model with finite amount of experience. More specifically, we
+consider the setting of continuous linearized systems with model
+uncertainty. The dynamics of this system are given as follows,
+\begin{equation}
+  \label{eq:17}
+  x_{t+1} = A_tx_t + B_tu_t
+\end{equation}
+where $x_t \in \statespace \subset \reals^d$ is the state of the
+system at time $t$, and $u_t \in \actionspace \subset \reals^p$ is the
+control input at time $t$. The matrices $A_t$ and $B_t$ represents the
+linearized 
+dynamics of the system at time $t$. This setting is quite general as
+we can linearize any non-linear dynamical system at each time step,
+and approximate it as a continuous linearized system as given in
+\eqref{eq:17}.
+
+
+For the purposes of this work, we will deal with the class of
+non-stationary linear controllers parameterized by $K = (K_1, \cdots,
+K_{T-1})$ such that the control input at time $t$ is given by $u_t =
+K_tx_t$. The objective is to
+minimize the sum of convex costs $J(K) = \sum_{t=1}^{T-1} c_t(x_t, u_t) +
+c_T(x_T)$ over a
+trajectory of length $T$ starting from a fixed state $x_1$ subject to
+the dynamics given in
+\eqref{eq:17}. Thus, the objective of the controller is to optimize
+\begin{equation}
+  \label{eq:18}
+  \begin{aligned}
+    \min_{K_1, \cdots, K_{T-1}} \quad & J(K) \\
+    \textrm{Subject to} \quad & x_{t+1} = A_tx_t + B_tu_t
+  \end{aligned}
+\end{equation}
+
+In our proposed work, the matrices $A_t, B_t$ are not known to the
+learner. Instead, the learner has access to nominal dynamics $\Ahat_t,
+\Bhat_t$ which are approximations of the true dynamics. Specifically,
+we assume that $\|A_t - \Ahat_t\|_2 = \|\Delta_t^A\|_2 \leq \epsilon_t^A$ and $\|B_t -
+\Bhat_t\|_2  = \|\Delta_t^B\|_2 \leq \epsilon_t^B$. Note that the learner has to
+synthesize a controller that performs well in the true dynamics given
+by \eqref{eq:17} while only having access to approximate nominal
+dynamics given by $\Ahat_t, \Bhat_t$. This is very similar to the
+setting that has been considered in this thesis so far, but with an
+important difference. The difference is that we are dealing
+with a continuous state and action space. While this makes the
+controller synthesis challenging, it is amenable to fine-grained
+analysis on the amount of experience needed to achieve a specific
+performance.
+
+Consider the optimal robust controller $K^*$ that
+is obtained by solving the following optimization problem
+\begin{equation}
+  \label{eq:19}
+  \begin{aligned}
+    \min_{K_1, \cdots, K_{T-1}} \max_{\substack{\|\Delta_t^A\|_2 \leq
+      \epsilon_t^A \\ \|\Delta_t^B\|_2 \leq \epsilon_t^B}}\quad & J(K) \\
+    \textrm{Subject to} \quad & x_{t+1} = (\Ahat_t + \Delta_t^A)x_t +
+    (\Bhat_t + \Delta_t^B)u_t
+  \end{aligned}
+\end{equation}
+We use $K^*$ as the controller against which we benchmark the
+performance of our learner. This results in bounds on the
+learner's performance in terms of how it compares against $K^*$
+performance. A similar notion of robust controller was introduced
+in~\cite{DBLP:journals/focm/DeanMMRT20} in the infinite-horizon linear
+quadratic regulator problem. Similar notions of min-max control have
+been explored in
+classical works such as $H_\infty$ control~\cite{10.5555/225507}.
+
+\subsection{Iterative Learning Control}
+\label{sec:iter-learn-contr}
+
+We formulate the problem as an iterative learning problem where the
+learner updates its controller across rollouts performed in the real
+system~\cite{DBLP:journals/jfr/MooreDB92}. Before the start of
+each rollout $i$, the learner computes a non-stationary linear
+controller $K^{(i)} = (K_1^{(i)}, \cdots, K_{T-1}^{(i)})$ that is used
+to control the system during the rollout. Note that while the learner
+only has access to nominal dynamics and experience from previous
+rollouts to compute the controller $K^{(i)}$, it is always evaluated
+on the real system with dynamics given by \eqref{eq:17}. Thus, after
+each rollout $i$, we obtain a trajectory $x_1^{(i)}, u_1^{(i)},
+\cdots, x_{T-1}^{(i)}, u_{T-1}^{(i)}, x_T^{(i)}$ and the learner
+incurs cost given by $J(K^{(i)})$. It is important to observe that
+unlike feedback controllers, the learner does not update the
+controller during the rollout and instead, only updates it after each
+rollout. 
+
+We measure the performance of the learner using the notion of regret
+with respect to $K^*$: the difference between the aggregate cost
+incurred by the learner and 
+that of the optimal robust controller $K^*$ over $N$ rollouts
+\begin{equation}
+  \label{eq:20}
+  \mathsf{Regret} = \sum_{i=1}^N J(K^{(i)}) - \sum_{i=1}^N J(K^*)
+\end{equation}
+
+Our goal in the proposed work is to design a controller synthesis
+procedure for the learner which at rollout $i$, only uses the nominal
+dynamics $\Ahat_t, \Bhat_t$ and the experience from past
+rollouts. Furthermore, we would also like to bound the regret of the
+learner w.r.t $K^*$ in terms of the number of rollouts $N$. Such a bound
+provides insights on the performance of the controller synthesized
+using an
+inaccurate model and finite amount of
+experience from $N$ rollouts.
+
+While the algorithms developed in this part of proposed work are quite
+different from the algorithms presented in the rest of the thesis, we
+believe that many of the ideas are similar. Similar to \cmax{} and
+\cmaxpp{}, we are not interested in learning the true dynamics $A_t,
+B_t$ but instead we are interested in optimizing the performance of
+the synthesized controller while being robust to inaccuracies in the model.
+
+
+\section{Schedule of Proposed Work}
+\label{sec:sched-prop-work}
+
+\begin{itemize}
+\item \textbf{Spring 2021}
+  \begin{itemize}
+  \item Finish work on robust control in continuous linearized systems
+    with model uncertainty described in Section~\ref{sec:robust-contr-cont}
+  \item Design and implement a task-aware incremental model learning
+    algorithm as described in Sections~\ref{sec:local-modeling} and~\ref{sec:task-driven-learning}
+  \end{itemize}
+\item \textbf{Summer 2021}
+  \begin{itemize}
+  \item Combine the incremental model learning algorithm with \cmax{}
+    and \cmaxpp{} to create the unified framework described in
+    Section~\ref{sec:updat-dynam-model}
+  \item Demonstrate the resulting framework on simulated and real
+    robot experiments
+  \end{itemize}
+\item \textbf{Fall 2021}
+  \begin{itemize}
+  \item Write and defend thesis
+  \end{itemize}
+\end{itemize}
+
+% \begin{itemize}
+% \item \textbf{Spring 2021}
+%   \begin{itemize}
+%   \item Formulate a task-aware loss function for training local residual
+%     dynamical models
+%   \item Design an online incremental algorithm to update dynamics of
+%     the model and complete the task
+%   \end{itemize}
+% \item \textbf{Summer 2021}
+%   \begin{itemize}
+%   \item Create a unified framework where the robot, during execution,
+%     switches between updating dynamics, learning model-free Q-value
+%     estimates, and biasing planner away from inaccurately modeled
+%     transitions
+%   \item Demonstrate the framework on simulated and real robot
+%     applications where we have access to an inaccurate dynamical model
+%   \end{itemize}
+% \item \textbf{Fall 2021}
+%   \begin{itemize}
+%   \item Write and defend thesis
+%   \end{itemize}
+% \end{itemize}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../main"
+%%% End:

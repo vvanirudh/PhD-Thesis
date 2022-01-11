@@ -15,3 +15,5 @@ auto
 *.toc
 /main.fdb_latexmk
 /main.fls
+/.auctex-auto/
+/chapters/.auctex-auto/

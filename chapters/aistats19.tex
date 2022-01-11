@@ -1,6 +1,6 @@
 
 \chapter{Sample Complexity of Exploration in Model-Free Policy Search}
-\label{cha:sample-compl-expl}
+\label{CHA:ARS}
 
 \epigraph{\textit{\ldots much of the benefit of policy search is achieved
 by black-box methods.}}{Jens Kober, Drew Bagnell and Jan Peters
@@ -17,7 +17,8 @@ a better grasp of when one works better than the other, in terms of
 sample complexity. This chapter also motivates the general theme of
 this thesis that dynamical models, despite being potentially
 inaccurate, are extremely useful sources of domain knowledge, and the
-price to pay for using model-free approaches can be steep.
+price to pay for using model-free approaches can be steep. This chapter is
+adapted from our original paper~\cite{aistats19}.
 
 \section{Introduction}
 Model-free policy search is a general approach to learn parameterized
@@ -302,7 +303,7 @@ and with $\alpha = \frac{C_{\theta}\delta}{(C^2+1)C_{s}\sqrt{T}}$ and $\delta = 
 \label{thm:online_linear_regression}
 \end{theorem}
 
-The proof for the above theorem can be found in our original paper~\cite{aistats19}.
+The proof for the above theorem can be found in Appendix~\ref{sec:proofs_bandit}.
 
 The above regret analysis essentially shows that exploration in action space delivers a regret bound that is independent of parameter space dimension $b$, while the regret of the exploration in parameter space algorithm will have explicit polynomial dependency on feature dimension $b$.  Converting the regret bounds to sample complexity bounds, we have that for any $\epsilon\in (0,1)$, to achieve $\epsilon$-average regret, Alg.~\ref{alg:random_search_OLR} needs $\mathcal{O}(\frac{b^2}{\epsilon^4})$ many rounds, while Alg.~\ref{alg:random_search_action_olr} requires $\mathcal{O}(1/\epsilon^4)$ many rounds.  
 
@@ -376,8 +377,7 @@ zeroth order non-convex optimization. The general strategy is to first construct
   \end{equation}
   where $J(\theta)\leq \Qbound$ for all $\theta \in \Theta$ and $\sigma^2$ is the variance of the random noise $\eta$ in Algorithm \ref{alg:random_search_parameter}.
 \end{theorem}
-The proof for the above theorem can be found in our original
-paper~\cite{aistats19}.
+The proof for the above theorem can be found in Appendix~\ref{sec:proofs_RL}.
 
 The above theorem gives us a convergence rate to a stationary point of
 policy search in parameter space. The role of variance of i.i.d noise
@@ -513,7 +513,7 @@ estimate of the gradient $\nabla_\theta J(\theta)$. We can also explicitly upper
   \end{equation}
   where $J(\theta)\leq \Qbound$ for all $\theta \in \Theta$ and $\sigma^2$ is the variance of the random noise $\tilde{\eta}$ in Algorithm \ref{alg:random_search_action}.
 \end{theorem}
-The proof for the above theorem can be found in our original paper~\cite{aistats19}.
+The proof for the above theorem can be found in Appendix~\ref{sec:proof-action-convergence}.
 
 The above theorem gives us a convergence rate to a stationary point of
 $J(\theta)$ for policy search in action space. This means that to

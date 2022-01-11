@@ -16,7 +16,7 @@ as~\cite{DBLP:journals/ml/KearnsS02, DBLP:journals/jmlr/BrafmanT02,
   DBLP:conf/aaai/Jiang18, rastogi2018sample}, use experience
 acquired from executions to update the dynamics of the model or learn
 a model from scratch.
-Chapters~\ref{CHA:CMAX} and~\ref{cha:lever-exper} have
+Chapters~\ref{CHA:CMAX} and~\ref{CHA:CMAXPP} have
 argued that updating the dynamics of the model requires a large amount
 of experience in large state spaces and can be at the expense of
 completing the task. While this is generally true, there are major
@@ -42,7 +42,7 @@ In this thesis, we are also interested in studying the task
 performance one can obtain using inaccurate models without
 updating the dynamics of the model online. So far, we have presented
 algorithmic contributions in Chapters~\ref{CHA:CMAX}
-and~\ref{cha:lever-exper} that provide evidence that we can achieve 
+and~\ref{CHA:CMAXPP} that provide evidence that we can achieve
 good empirical performance without requiring any updates to the
 model. However, we have mostly
 restricted ourselves to the discrete setting where one can perform
@@ -97,7 +97,7 @@ Most existing works in the model-based
 reinforcement learning literature use a global function
 approximator to learn the true dynamics from scratch. However, as
 evidenced by our experiments in Chapters~\ref{CHA:CMAX}
-and~\ref{cha:lever-exper}, global function approximators such as
+and~\ref{CHA:CMAXPP}, global function approximators such as
 neural networks require a large amount of executions before they can
 approximate the true dynamics well enough to complete the task. In
 contrast, local function approximation methods such as the ones
@@ -109,7 +109,7 @@ LWPR~\cite{DBLP:conf/icml/VijayakumarS00} and more recent works such
 as LGR~\cite{DBLP:journals/corr/MeierHS14} and incremental
 LGR~\cite{DBLP:conf/nips/MeierHS14} have shown empirical success in
 learning inverse dynamics online for torque
-control. Our experiments in Chapters~\ref{CHA:CMAX} and~\ref{cha:lever-exper}
+control. Our experiments in Chapters~\ref{CHA:CMAX} and~\ref{CHA:CMAXPP}
 using the model KNN baseline, which is a local modeling method, have
 provided early indications to the efficacy of these local modeling
 methods. The success of these local modeling methods motivates us to

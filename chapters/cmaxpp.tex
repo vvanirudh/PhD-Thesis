@@ -1,6 +1,6 @@
 \chapter{Leveraging Experience in Planning and Execution
   using Inaccurate Models}
-\label{cha:lever-exper}
+\label{CHA:CMAXPP}
 
 \epigraph{\textit{\ldots many of mundane manipulation tasks
 such as picking and placing various objects in a kitchen are
@@ -22,7 +22,8 @@ repetition. These guarantees require a milder assumption on the
 accuracy of the model which is easier to satisfy when compared to the
 assumption required by \cmax{}. However, like \cmax{}, the proposed
 algorithm does not require any updates to the dynamics of the model
-and only adapts the behavior of the planner in the spirit of this thesis.
+and only adapts the behavior of the planner in the spirit of this thesis. This
+chapter is adapted from our original paper~\cite{cmaxpp}.
 
 \section{Introduction}
 \label{sec:introduction}
@@ -921,7 +922,7 @@ Since the state space is small, we use
 Algorithm~\ref{alg:small-state-spaces} for \cmaxpp{} and
 \acmaxpp{}. For \acmaxpp{}, we use a non-increasing sequence with
 $\alpha_i = 1 + \beta_i$ where $\beta_1 = 100$ and $\beta_i$ is
-decreased by 2.5 after every $5$ repetitions (See Appendix for more details on choosing the sequence.) We
+decreased by 2.5 after every $5$ repetitions (See Appendix~\ref{sec:sens-exper} for more details on choosing the sequence.) We
 compare both algorithms with \cmax{}. For all the approaches, we
 perform $K=100$ expansions. Since
 the motion primitives are computed offline using an expensive
@@ -1163,7 +1164,7 @@ Limitations of
 \cmaxpp{} and \acmaxpp{} include hyperparameters such as the
 radius $\delta$ and the sequence $\{\alpha_i\}$, which might need to
 be tuned for the task.
-However, from our sensitivity experiments (see Appendix) we observe
+However, from our sensitivity experiments (see Appendix~\ref{sec:sens-exper}) we observe
 that \acmaxpp{} performance is robust to the choice of sequence
 $\{\alpha_i\}$ as long as it is non-increasing.
 % (See Appendix for sensitivity experiments

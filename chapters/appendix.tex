@@ -1198,6 +1198,360 @@ limits. In the real world, if the robot tries to move the
 non-operational joint, the arm does not move. Thus, the robot realizes
 unreachable states only through real world executions.
 
+\clearpage
+\newpage
+\section{Appendix for Chapter~\ref{CHA:CMAXPP}}
+\label{sec:append-chapt-cmaxpp}
+
+\subsection{Sensitivity Experiments}
+\label{sec:sens-exper}
+
+In this section, we present the results of our sensitivity experiments
+examining the performance of \acmaxpp{} with the choice of the
+sequence $\{\alpha_i\}$. We compare the performance of different
+choices of the sequence $\{\alpha_i\}$ on the $3$D mobile robot
+navigation task. For each run, we average the results across $5$
+instances with randomly placed ice patches and present the mean and
+standard errors. To keep the figures concise, we plot the cumulative
+number of steps taken to reach the goal from the start of the first
+lap to the current lap across all laps. In all our runs, \acmaxpp{}
+successfully completes all $200$ laps and hence, we do not report the
+number of successful instances in our results.
+
+We choose $4$ schedules for the sequence $\{\alpha_i\}$:
+\begin{enumerate}
+\item \textbf{Exponential Schedule}: In this schedule, we vary
+  $\beta_{i+1} = \rho\beta_i$ where $\rho < 1$ is a constant that is
+  tuned and $\alpha_i = 1 + \beta_i$. Observe that as $i\rightarrow
+  \infty$, $\alpha_i \rightarrow 1$ and that the sequence
+  $\{\alpha_i\}$ is a decreasing sequence.
+
+  We vary both the initial $\beta_1$ chosen and the constant $\rho$ in
+  our experiments. For $\beta_1$ we choose among values $[10, 100,
+  1000]$ and $\rho$ is chosen among $[0.5, 0.7, 0.9]$. The results are
+  shown in Figure~\ref{fig:exp}.
+  \begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/alpha_exp.pdf}
+  \caption{Sensitivity experiments with an exponential schedule}
+  \label{fig:exp}
+\end{figure}
+
+All choices have almost the same performance with $\beta_1 = 1000$ and
+$\rho = 0.9$ having the best performance initially but has slightly
+worse performance in the last several laps. The choice of $\beta_1 =
+100$ and $\rho = 0.9$  seems to be a good choice with great performance in both
+initial and final laps.
+
+\item \textbf{Linear Schedule}: In this schedule, we vary $\beta_{i+1}
+  = \beta_i - \eta$ where $\alpha_i = 1 + \beta_i$ and $\eta > 0$ is a
+  constant that is determined
+  so that $\beta_{200} = 0$, i.e. $\alpha_{200} = 1$. Hence, we have
+  $\eta = \frac{\beta_1}{200}$.
+
+  We vary the initial $\beta_1$ and choose among values $[10, 100,
+  200]$. The results are shown in Figure~\ref{fig:linear}.
+  \begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/alpha_linear.pdf}
+  \caption{Sensitivity experiments with a linear schedule}
+  \label{fig:linear}
+\end{figure}
+
+All three choices have the same performance except in the last few
+laps where $\beta_1 = 10$ degrades while the other two choices perform well.
+\item \textbf{Time Decay Schedule}: In this schedule, we vary
+  $\beta_{i+1} = \frac{\beta_1}{i+1}$ where $\alpha_i = 1 +
+  \beta_i$. In other words, we decay $\beta$ at the rate of
+  $\frac{1}{i}$ where $i$ is the lap number. Again, observe that as $i
+  \rightarrow \infty$, we have $\alpha_i \rightarrow 1$.
+
+  We vary the initial $\beta_1$ and choose among values $[10, 100,
+  1000]$. The results are shown in Figure~\ref{fig:time}.
+  \begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/alpha_time.pdf}
+  \caption{Sensitivity experiments with a time decay schedule}
+  \label{fig:time}
+\end{figure}
+
+The choices of $\beta_1 = 100$  and $\beta_1 = 1000$ have the best
+(and similar) performance while $\beta_1 = 10$ has a poor performance
+as it quickly switches to \cmaxpp{} in the early laps and wastes
+executions learning accurate $Q$-values.
+\item \textbf{Step Schedule}: In this schedule, we vary $\beta$ as a
+  step function with $\beta_{i+1} = \beta_i - \delta$ if $i$ is a
+  multiple of $\xi$ where $\xi$ is the step frequency, $\alpha_i = 1 +
+  \beta_i$ and $\delta$ is a constant that is determined so that
+  $\beta_{200} = 0$, i.e. $\alpha_{200} = 1$. Hence, we have $\delta =
+  \frac{\beta_1\xi}{200}$.
+
+  We vary both the initial $\beta_1$ and the step frequency $\xi$. For
+  $\beta_1$ we choose among values $[10, 100, 200]$ and for $\xi$ we
+  choose among $[5, 10, 20]$. The results are shown in
+  Figure~\ref{fig:step}.
+  \begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/alpha_step.pdf}
+  \caption{Sensitivity experiments with a step schedule}
+  \label{fig:step}
+\end{figure}
+
+All choices have the same performance and \acmaxpp{} seems to be
+robust to the choice of step size frequency.
+\end{enumerate}
+
+For our final comparison, we will pick the best performing choice
+among all the schedules and compare performance among these selected
+choices. The results are shown in Figure~\ref{fig:best}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/alpha_best.pdf}
+  \caption{Sensitivity experiments with best choices among all
+    schedules}
+  \label{fig:best}
+\end{figure}
+
+We can observe that all schedules have the same performance except the
+exponential schedule which has worse performance. This can be
+attributed to the rapid decrease in the value of $\beta$ compared to
+other schedules and thus, around lap $50$ \acmaxpp{} switches to
+\cmaxpp{} resulting in a large number of executions wasted to learn
+accurate $Q$-value estimates. This does not happen for other schedules
+as they decrease $\beta$ gradually and thus, spreading out the
+executions used to learn accurate $Q$-value estimates across several
+laps and not performing poorly in any single lap.
+
+\subsection{Experiment Details}
+\label{sec:experiment-details}
+
+All experiments were implemented using Python 3.6 and run on a
+$3.1$GHz Intel Core i$5$ machine. We use
+PyTorch~\cite{NEURIPS2019_9015} to train neural network function
+approximators in our $7$D experiments, and use Box2D~\cite{catto2007box2d} for our 3D mobile
+robot simulation (similar to OpenAI Gym~\cite{brockman2016openai}
+\texttt{car\_racing} environment) and use
+PyBullet~\cite{coumans2013bullet} for our $7$D PR2 experiments.
+
+\subsubsection{3D Mobile Robot Navigation with Icy Patches}
+\label{sec:3d-mobile-robot}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/race_track_full_pic.png}
+  \caption{$3$D Mobile Robot experiment example track}
+  \label{fig:track}
+\end{figure}
+
+An example track used in the $3$D experiment is shown in
+Figure~\ref{fig:track}. We generate $66$ motion primitives offline
+using the following procedure: (a) We first define the primitive
+action set for the robot by discretizing the steering angle into 3
+cells, one corresponding to zero and the other two corresponding to
+$+0.6$ and $-0.6$ radians. We also discretize the speed of the robot
+to 2 cells corresponding to $+2$m/s and $-2$m/s, (b) We then
+discretize the state space into a $100\times 100$ grid in $XY$ space
+and $16$ cells in $\theta$ dimension. Thus, we have a $100 \times 100
+\times 16$ grid in $XY\theta$ space., (c) We then initialize the robot
+at $(0, 0)$ $xy$ location with different headings chosen among $[0,
+\cdots, 15]$ and roll out all possible sequences of primitive actions
+for all possible motion primitive lengths from $1$ to $15$ time steps,
+(d) We filter out all motion primitives whose end point is very close
+to a cell center in the $XY\theta$ grid. During execution, we use a
+pure pursuit controller to track the motion primitive so that the robot
+always starts and ends on a cell center. During planning, we simply
+use the discrete offsets stored in the motion primitive to compute the
+next state (and thus, the model dynamics are pre-computed offline
+during motion primitive generation.)
+
+The cost function used is as follows: for any motion primitive $a$ and
+state $s$,
+the cost of executing $a$ from $s$ is given by $c(s, a) = \sum_{s'}
+c'(s')$ where $c'$ is a pre-defined cost map over the $100 \times 100
+\times 16$ grid and $s'$ is all the intermediate states (including the
+final state) that the robot
+goes through while executing the motion primitive $a$  from $s$. The
+pre-defined cost map is defined as follows: $c'(s) = 1$ if state $s$
+lies on the track (i.e. $xy$ location corresponding to $s$ lies on the
+track) and $c'(s) = 100$ otherwise (i.e. all $xy$ locations
+corresponding to grass or wall has a cost of $100$). This encourages
+the planner to come up with a path that lies completely on the track.
+
+We define two checkpoints on the opposite ends of the track (shown as
+blue squares in Figure~\ref{fig:track}.) The goal of the robot is to
+reach the next checkpoint incurring least cost while staying on the
+track. Note that this
+requires the robot to complete laps around the track as quickly as
+possible. Since the state space is small, we maintain value estimates
+$V, Q, \tilde{V}$ using tables and update the appropriate table entry
+for each value update. The tables are initialized with value estimates
+obtained by planning in the model $\Mhat$ using a planner with $K=100$
+expansions until the robot can efficiently complete the laps using the
+optimal paths. However, this does not mean that the initial value
+estimates are the optimal values for $\Mhat$ dynamics since the
+planner looks ahead and can achieve optimal paths with underestimated
+value functions. Nevertheless, these estimates are highly informative.
+
+\subsubsection{7D Pick-and-Place with a Heavy Object}
+\label{sec:7d-pick-place}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmaxpp/intro_grasp_new.png}
+  \caption{$7$D Pick-and-Place Experiment}
+  \label{fig:pr2}
+\end{figure}
+
+For our $7$D experiments, we make use of Bullet Physics Engine through
+the pyBullet interface. For motion planning and other simulation
+capabilities we make use of \texttt{ss-pybullet}
+library~\cite{sspybullet}. The task is shown in
+Figure~\ref{fig:pr2}. The goal is for the robot to pick the heavy
+object from its start pose and place it at its goal pose while
+avoiding the obstacle, without any resets. Since the object is heavy,
+the robot fails to lift the object in certain configurations where it
+cannot generate the required torque to lift the object. Thus, the
+robot while lifting the object might fail to reach the goal waypoint
+and onky reach an intermediate waypoint resulting in discrepancies
+between modeled and true dynamics.
+
+
+This is represented as a planning problem in $7$D statespace. The
+first $6$ dimensions correspond to the $6$DOF pose of the object (or
+gripper,) and the last dimension corresponds to the redundant DOF in
+the arm (in our case, it is the upper arm roll joint.) Given a $7$D
+configuration, we use IKFast library~\cite{diankov_thesis} to compute
+the corresponding $7$D joint angle configuration. The action space
+consists of $14$ motion primitives that move the arm by a fixed offset
+in each of the $7$ dimensions in positive and negative directions. The
+discrepancies in this experiment are only in the $Z$ dimension
+corresponding to lifting the object. For planning, we simply use a
+kinematic model of the arm and assume that the object being lifted is
+extremely light. Thus, we do not need to explicitly consider dynamics
+during planning. However, during execution we take the dynamics into
+account by executing the motion primitives in the simulator. The cost
+of any transition is $1$ if the object is not at goal pose, $0$ if the
+object is at goal pose. We start the next repetition only if the robot
+reached the goal pose in the previous repetition.
+
+
+The $7$D state space is discretized into $10$ cells in each dimension
+resulting in $10^7$ states. Since the state space is large we use
+neural network function approximators to maintain the value functions
+$V, Q, \tilde{V}$. For the state value functions $V, \tilde{V}$ we use
+the following neural network approximator: a feedforward network with
+$3$ hidden layers consisting of $64$ units each, we use ReLU
+activations after each layer except the last layer, the network takes
+as input a $34$D feature representation of the $7$D state computed as
+follows:
+
+\begin{itemize}
+	\item For any discrete state $s$, we compute a continuous
+          $10$D representation $r(s)$ that is used to construct the
+          features
+
+	\begin{itemize}
+		\item The discrete state is represented as $(xd, yd,
+                  zd, rd, pd, yd, rjointd)$ where $(xd, yd, zd)$
+                  represents the $3$D discrete location of the object
+                  (or gripper,) $(rd, pd, yd)$ represents the discrete
+                  roll, pitch, yaw of the object (or gripper,) and
+                  $rjointd$ represents the discrete redundant joint
+                  angle
+
+		\item We convert $(xd, yd, zd)$ to a continuous
+                  representation by simply dividing by the grid size
+                  in those dimensions, i.e. $(xc, yc, zc) = (xd/10,
+                  yd/10, zd/10)$
+
+		\item We do a similar construction for $rjointc$,
+                  i.e. $rjointc = rjointd/10$
+
+		\item However, note that $rd, pd, yd$ are angular
+                  dimensions and simply dividing by grid size would
+                  not encode the wrap around nature that is inherent
+                  in angular dimensions (we did not have this problem
+                  for $rjointd$ as the redundant joint angle has lower
+                  and upper limits, and is always recorded as a value
+                  between those limits.) To account for this, we use a
+                  sine-cosine representation defined as $(rc1, rc2,
+                  pc1, pc2. yc1, yc2) = (sin(rc), cos(rc), sin(pc),
+                  cos(pc), sin(yc), cos(yc))$ where $rc, pc, yc$ are
+                  the roll, pitch, yaw angles corresponding to the
+                  cell centers of the grid cells $rd, pd, yd$.
+
+		\item Thus, the final $10$D representation of state
+                  $s$ is given by $r(s) = (xc, yc, zc, rc1, rc2, pc1,
+                  pc2, yc1, yc2, rjointc)$
+
+		\item We also define a truncated $9$D representation
+                  $r'(s) = (xc, yc, zc, rc1, rc2, pc1, pc2, yc1, yc2)$
+                  and a $3$D representation $r''(s) = (xc, yc, zc)$
+
+	\end{itemize}
+	\item The first feature is the $9$D relative position of the $6$D goal pose w.r.t the object $f1 = r'(g) - r'(s)$
+	\item The second feature is the $10$D relative position of the object w.r.t the gripper home state $h$, $f2 = r(s) - r(h)$
+	\item The third feature is the $9$D relative position of the goal w.r.t the gripper home state $h$, $f3 = r'(g) - r'(h)$
+	\item The fourth feature is the $3$D relative position of the obstacle left top corner $o1$ w.r.t the object, $f4 = r''(o1) - r''(s)$
+	\item The fifth and final feature is the $3$D relative position of the object right bottom corner $o2$ w.r.t. the object, $f5 = r''(o2) - r''(s)$
+	\item Thus, the final $34$D feature representation is given by $f(s) = (f1, f2, f3, f4, f5)$.
+\end{itemize}
+
+The output of the network is a single scalar value representing the
+cost-to-goal of the input state. Instead of learning the
+cost-to-goal/value from scratch, we start with an initial value
+estimate that is hardcoded (manhattan distance to goal in the $7$D
+discrete grid) and the neural network approximator is used to learn a
+residual on top of it. A similar trick was used in
+\cmax{}~\cite{Vemula-RSS-20}. The residual state value function
+approximator was initialized to output $0$ for all $s \in
+\statespace$. We use a similar architecture for the residual $Q$-value
+function approximator but it takes as input the $34$D state feature
+representation and outputs a vector in $\mathbb{R}^{|\actionspace|}$
+(in our case, $\mathbb{R}^{14}$) to represent the cost-to-goal
+estimate for each action $a \in \actionspace$. We also use the same
+hardcoded value estimates as before in addition to the residual
+approximator to construct the $Q$-values. All baselines and proposed
+approaches use the same function approximator and same initial
+hardcoded value estimates to ensure fair comparison. The value
+function approximators are trained using mean squared loss.
+
+
+The residual model learning baseline with neural network (NN) function
+approximator uses the following architecture: $2$ hidden layers each
+with $64$ units and all layers are followed by ReLU activations except
+the last layer. The input of the network is the $34$D feature
+representation of the state and a one-hot encoding of the action in
+$\mathbb{R}^14$. The output of the network is the $7$D continuous
+state which is added to the state predicted by the model $\Mhat$. The
+loss function used to train the network is a simple mean squared
+loss. The residual model learning baseline with K-Nearest Neighbor
+regression approximator (KNN) uses a manhattan radius of $3$ in the
+discrete $7$D state space. We compute the prediction by averaging the
+next state residual vector observed in the past for any state that
+lies within the radius of the current state. The averaged residual is
+added to the next state predicted by model $\Mhat$ to obtain the
+learned next state.
+
+
+We use Adam optimizer~\cite{DBLP:journals/corr/KingmaB14} with a
+learning rate of $0.001$ and a weight decay (L$2$ regularization
+coefficient) of $0.001$ to train all the neural network function
+approximators in all approaches. We use a batch size of $32$ for the
+state value function approximators and a batch size of $128$ for the
+$Q$-value function approximators. We perform $U = 3$ updates for state
+value function and $U = 5$ updates for state-action value function for
+each time step. We update the parameters of all neural network
+approximators using a polyak averaging coefficient of $0.5$.
+
+
+Finally, we use hindsight experience replay
+trick~\cite{DBLP:conf/nips/AndrychowiczCRS17} in training all the
+value function approximators with the probability of sampling any
+future state in past trajectories as the goal set to $0.7$. This is
+crucial as our cost function used is extremely sparse.
+
 %%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../main"

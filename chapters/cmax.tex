@@ -1,5 +1,5 @@
 \chapter{Planning and Execution using Inaccurate Models}
-\label{cha:plann-exec}
+\label{CHA:CMAX}
 
 \epigraph{\textit{For example, if in a car our current policy drives a
     maneuver too far to the left, \ldots even a very poor model of the
@@ -20,7 +20,8 @@ non-trivial and it works very well in practice. This algorithm is the
 first approach in literature to interleave planning and execution using inaccurate
 dynamical model,
 with provable guarantees on completing the task without requiring any
-updates to the dynamics of the model.
+updates to the dynamics of the model. This chapter is
+adapted from our original paper~\cite{cmax}.
 
 \section{Introduction}
 \label{sec:introduction}
@@ -585,6 +586,9 @@ In order to prove completeness, we assume the following:
   \label{assumption:core}
 \end{assumption}
 
+The significance of this assumption is explained in
+Appendix~\ref{sec:closer-look-at}.
+
 \begin{algorithm}[t]
   \caption{\textsc{Cmax} -- Small State Spaces}
   {\normalsize
@@ -1120,7 +1124,7 @@ a limited-expansion search planner that uses an accurate model with
 the full knowledge about
 obstacles to understand the
 difficulty of the task. Specific details on the architecture and baseline
-parameters can be found in our original paper~\cite{cmax}.
+parameters can be found in Appendix~\ref{sec:4d-planar-pushing}.
 
 For our implementation, we follow Algorithm~\ref{alg:large-state-spaces}
 with euclidean distance metric, $\xi = 0.01$, and $\delta =
@@ -1310,7 +1314,7 @@ The
 model $\hat{M}$ used by planning \textit{does not} model the object as
 heavy and hence, does not capture the dynamics of the arm correctly when it
 holds the heavy object. Specific details regarding the experiment can
-be found in our original paper~\cite{cmax}.
+be found in Appendix~\ref{sec:3d-pick-place}.
 % The cost of each transition is $1$ if 
 % object is not at the goal place location, otherwise it is $0$.
 
@@ -1380,7 +1384,7 @@ planning \textit{does not} know that a joint is non-operational and
 assumes that the arm can attain any configuration within the joint
 limits. In the real world, if the robot tries to move the
 non-operational joint, the arm does not move. Specific details regarding the experiment can
-be found in our original paper~\cite{cmax}.
+be found in Appendix~\ref{sec:7d-arm-planning}.
 % We use a
 % weighted version of
 % limited-expansion search proposed in

@@ -9,7 +9,7 @@ readers who are interested in low-level details they can refer to this chapter
 as needed.
 
 \section{Appendix for Chapter~\ref{CHA:ARS}}
-\label{sec:append-chapt-refch}
+\label{sec:append-chapt-ars}
 
 \subsection{Proof of Theorem~\ref{thm:online_linear_regression}}
 \label{sec:proofs_bandit}
@@ -988,7 +988,215 @@ repeated across $10$ random seeds (different from the ones used for
 tuning). The number of interactions needed to reach the stationary
 point as the noise covariance is increased is recorded and shown in
 Figure~\ref{fig:multistep}.
+\clearpage
+\newpage
+\section{Appendix for Chapter~\ref{CHA:CMAX}}
+\label{sec:append-chapt-cmax}
 
+\subsection{A Closer Look at the Assumption}
+\label{sec:closer-look-at}
+
+Assumption~\ref{assumption:core} requires that there exists at least
+one path from the \textit{current state} to a goal state that does not
+contain any transition that is known to be incorrect. In other words, it should
+hold for every time step $t$ before the robot reaches the goal. Hence,
+it is an assumption on both the quality of the approximate model and
+the execution trace (the states visted during execution) of
+\textsc{Cmax}. This makes the assumption hard to verify prior to
+execution as it is
+dependent on the operation of the algorithm under true dynamics.
+
+However, we can relax the assumption in small state spaces by using the
+\textit{model optimism} assumption from
+\citet{DBLP:conf/aaai/Jiang18}. Specifically, an optimistic model is an
+approximate model $\hat{M}$ whose optimal cost-to-go under its dynamics
+$\hat{f}$ at each state $s \in \statespace$ underestimates the optimal
+cost-to-go under true dynamics $f$. Notice that in small state spaces,
+we can afford to do full state space planning (using value iteration,
+for example) at each time step $t$, thereby obtaining the best action
+under the approximate model's optimal cost-to-go. Thus, if the initial
+approximate model $\hat{M}$ in \textsc{Cmax} is optimistic and we
+perform full state space planning at each time step $t$, then we are
+guaranteed to reach the goal. In other words, optimistic intial model
+$\hat{M}$ is \textit{sufficient} for completeness if we perform full
+state space planning at each time step.
+
+Unfortunately, performing full state space planning at each time step
+is computationally very expensive in large state spaces (or
+intractable in continuous state spaces.) Hence, we need to resort to
+limited-expansion planning or sample-based
+planning~\cite{DBLP:journals/ml/KearnsMN02} which can result in
+suboptimal actions. In these cases, model optimism is not sufficient
+anymore, and we require assumptions such as
+Assumption~\ref{assumption:core} and \ref{assumption:core-large} that
+rely on the execution trace to guarantee completeness of \textsc{Cmax}.
+
+\subsection{4D Planar Pushing Experiment Details}
+\label{sec:4d-planar-pushing}
+
+In this experiment, the task is for a robotic gripper to push a cube
+from a start location to a goal location in the presence of
+static obstacles without any resets, as shown in
+Figure~\ref{fig:search} (right). This can be represented as a
+planning problem in 4D continuous state space $\statespace$ with any state represented as
+the tuple $s = (g_x,
+g_y, o_x, o_y)$ where $(g_x, g_y)$ are the xy-coordinates of the
+gripper and $(o_x, o_y)$ are the xy-coordinates of the object. The
+model $\hat{M}$ used for planning \textit{does not} have the static obstacles and the
+robot can only discover the state-action pairs that are affected due
+to the obstacles through real world executions. The
+action space $\actionspace$ is a discrete set of 4 actions that move
+the gripper end-effector in the 4 cardinal directions by a fixed
+offset using an IK-based controller. The cost of each transition is
+$1$ when the object is not at the goal location, and $0$
+otherwise.
+
+For all the approaches (except Q-learning), we use
+the following neural network architecture for cost-to-go
+approximation: a feedforward network with 3 hidden layers each of $64$
+units, the network takes as input a $15$D feature representation of the 4D
+state $s = (o_x, o_y, g_x, g_y)$ that is constructed as follows:
+\begin{itemize}
+\item Relative position of the object w.r.t gripper $\frac{\mathbf{o}
+    - \mathbf{g}}{\|\mathbf{o} - \mathbf{g}\|_2}$, where $\mathbf{o} =
+  (o_x, o_y)$ is the $2$D object position and $\mathbf{g} = (g_x,
+  g_y)$ is the $2$D gripper position
+\item Distance between position of the object and gripper
+  $\|\mathbf{o} - \mathbf{g}\|_2$
+\item Relative position of the object w.r.t. goal $\frac{\mathbf{o} -
+    \mathbf{t}}{\|\mathbf{o} - \mathbf{t}\|_2}$ where $\mathbf{t} =
+  (t_x, t_y)$ is the $2$D goal location
+\item Distance between position of the object and goal location
+  $\|\mathbf{o} - \mathbf{t}\|_2$
+\item Relative position of the gripper w.r.t goal $\frac{\mathbf{g} -
+    \mathbf{t}}{\|\mathbf{g} - \mathbf{t}\|_2}$
+\item Distance between position of the gripper and goal location
+  $\|\mathbf{g} - \mathbf{t}\|_2$
+\item Relative position of the object w.r.t center of the table
+  $\frac{\mathbf{o} - \mathbf{c}}{\|\mathbf{o} - \mathbf{c}\|_2}$
+\item Distance between position of the object and center of the table
+  ${\|\mathbf{o} - \mathbf{c}\|_2}$
+\item Relative position of the gripper w.r.t center of the table
+  $\frac{\mathbf{g} - \mathbf{c}}{\|\mathbf{g} - \mathbf{c}\|_2}$
+\item Distance between position of the gripper and center of the table
+  ${\|\mathbf{g} - \mathbf{c}\|_2}$
+\end{itemize}
+
+The output of the network is a single scalar value representing the
+cost-to-go of the input state. We use ReLU activations after each
+layer except the last layer. Instead of learning the cost-to-go from
+scratch, we start with an initial cost-to-go estimate that is
+hardcoded and the neural network function approximator is used to
+learn a residual on top of it. The hardcoded initial cost-to-go
+estimate is obtained as follows:
+\begin{itemize}
+\item For the given object position, construct a target position for
+  the gripper to go to as follows:
+  \begin{itemize}
+  \item Get the angle of the vector pointing from the object to the
+    goal location: $\theta = \tan^{-1}(\frac{t_x - o_x}{t_y - o_y})$
+  \item The target position for gripper is then given by $\mathbf{gt}
+    = (o_x - \frac{\sin(\theta)w}{2}, o_y - \frac{\cos(\theta)w}{2})$
+    where $w$ is the width of the object
+  \end{itemize}
+\item We compute the manhattan distance from the gripper to its target
+  position $M(\mathbf{g}, \mathbf{gt})$, and from the object to the
+  goal location $M(\mathbf{o}, \mathbf{t})$
+\item The hardcoded heuristic is obtained as $\hat{V}(s) =
+  \frac{M(\mathbf{g}, \mathbf{gt}) + M(\mathbf{o}, \mathbf{t})}{d}$,
+  where $d$ is the fixed offset distance the gripper moves for each action
+\end{itemize}
+The residual cost-to-go function approximator is initialized in such a
+way that it outputs $0$ initially for all $s \in \statespace$. We use
+a similar residual Q-value function approximator for Q-learning with
+the same architecture but that takes as input the above feature
+representation and outputs a vector in $\reals^{|\actionspace|}$,
+where each element corresponds to the Q-value for that action in the
+input state. We also use hardcoded initial Q-values that are
+constructed in a similar fashion $\hat{Q}(s, a) = c(s, a) +
+\hat{V}(\hat{f}(s, a))$. To ensure a fair comparison across all
+baselines, we use the same neural network function approximator for
+cost-to-go, and start with the same initial cost-to-go
+estimates.
+
+For the model learning baseline that uses Neural network function
+approximator, we use a feedforward neural network with $2$ hidden
+layers each of $32$ units, the network takes as input the 4D state $s$
+and a one-hot encoding of the discrete action $a$ and outputs a 4D
+residual vector. The residual vector is added to the next state
+predicted by the model $\hat{f}(s, a)$ to get the learned next
+state. The loss function used to train the residual is mean
+squared loss.
+
+For the model learning baseline that uses KNN function approximator,
+we use a radius of $0.02$, and average the next state residual vector observed
+for any state within this radius to obtain the prediction for a new
+state residual vector. In the same way as above, this residual vector
+is added to the next state predicted by the model $\hat{f}(s, a)$ to
+obtain the learned next state.
+
+For all the neural network function approximators, we use an Adam
+optimizer with learning rate of $0.001$, and an L2 regularization
+constant of $0.01$. We use a batch size of $64$ for training all the
+neural network function approximators. For Q-learning, we use an
+random exploration probability of $\epsilon = 0.1$ and change the
+target network by a polyak coefficient of $0.9$.
+
+For all the approaches, we use a
+limited expansion search planner with $K = 5$ expansions, $N = 5$
+planning updates, batch size $B = 64$, and an Adam optimizer \cite{DBLP:journals/corr/KingmaB14} with
+learning rate $\eta = 0.001$.
+
+In training the cost-to-go function approximation, we use the
+hindsight experience replay trick with a probability of $0.8$ for
+sampling any future state in the trajectory as the desired goal. This
+helps in keeping the function approximation stable and also helps in
+generalization.
+
+\subsection{3D Pick-and-Place Experiment Details}
+\label{sec:3d-pick-place}
+
+The task of this physical robot experiment (Figure~\ref{fig:real-3d})
+is to pick and place a heavy object using a PR2 arm from a start pick
+location to a goal place
+location while avoiding an obstacle. This can be represented as a
+planning problem in 3D discrete state space $\statespace$ where
+each state corresponds to the 3D location of the end-effector. In our
+experiment, we discretize each dimension into $20$ bins and plan in
+the resulting discrete state space of size $20^3$. Since it is a
+relatively small state space, we use exact planning updates without
+any function approximation following
+Algorithm~\ref{alg:small-state-spaces} with $K=3$ expansions. The action space is a
+discrete set of $6$ actions corresponding to a fixed offset movement
+in positive or negative direction along each dimension. We use a
+RRT-based motion planner \cite{DBLP:journals/ijrr/LaValleK01} to plan the path of the
+arm between states, while avoiding collision with the obstacle. The
+model $\hat{M}$ used by planning \textit{does not} model the object as
+heavy and hence, does not capture the dynamics of the arm correctly when it
+holds the heavy object. The cost of each transition is $1$ if
+object is not at the goal place location, otherwise it is $0$.
+
+\subsection{7D Arm Planning Experiment Details}
+\label{sec:7d-arm-planning}
+
+The task of this physical robot experiment (Figure~\ref{fig:real-7d}) is
+to move the PR2 arm with a
+non-operational joint from a start configuration so that the
+end-effector reaches a goal location, specified as a 3D
+region. We represent this as a planning problem in 7D
+discrete statespace $\statespace$ where each dimension corresponds to
+a joint of the arm bounded by its joint limits. Each dimension is
+discretized into $10$ bins resulting in a large state space of
+size $10^7$. The action space
+$\actionspace$ is a discrete set of size
+$14$ corresponding to moving each joint by a fixed offset in the
+positive or negative direction. We use an IK-based controller to
+navigate between discrete states. The model $\hat{M}$ used for
+planning \textit{does not} know that a joint is non-operational and
+assumes that the arm can attain any configuration within the joint
+limits. In the real world, if the robot tries to move the
+non-operational joint, the arm does not move. Thus, the robot realizes
+unreachable states only through real world executions.
 
 %%% Local Variables:
 %%% mode: latex

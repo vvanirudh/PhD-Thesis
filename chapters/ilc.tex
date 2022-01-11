@@ -1,4 +1,4 @@
-\chapter{On the Effectiveness of Iterative Learning Control}
+\chapter{On the Effectiveness of Using an Inaccurate Model}
 \label{cha:ilc}
 
 \epigraph{\textit{Internal models play an important role in generating
@@ -308,7 +308,7 @@ is required for our \ILC{} analysis:
 The above assumption ensures that $x^{T}B_{t}R^{-1}\Bhat_{t}^{T}x \geq 0$ for any vector
 $x \in \reals^{n}$ and all time steps $t$. Intuitively, if this is not true then \ILC{} is not
 guaranteed to converge to a local minima. A more detailed
-explanation is given in Appendix~\ref{sec:assumpt-refass}.
+explanation is given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}.
 
 \section{Main Results}
 \label{sec:main-results}
@@ -316,7 +316,7 @@ explanation is given in Appendix~\ref{sec:assumpt-refass}.
 In this section, we will present the main results concerning the worst
 case performance bounds of \MM{} and \ILC{} in the LQR setting with an
 approximate model as described in Section~\ref{sec:problem-setup}. Our
-first theorem (proof in Appendix~\ref{sec:general-results-1})
+first theorem (proof is given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434})
 bounds the cost suboptimality of any time-varying linear 
 controller $\Khat$ in terms of the norm differences $\|\KOPT_t -
 \Khat_t\|$:
@@ -344,7 +344,7 @@ bound these norm differences for both \MM{} and \ILC{}.
 \label{sec:optimal-control-with}
 
 Our next
-lemma (proof in Appendix~\ref{sec:cert-equiv-contr-2}) bounds the difference $\|\KCE_t - \KOPT_t\|$ in terms of
+lemma (proof is given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}) bounds the difference $\|\KCE_t - \KOPT_t\|$ in terms of
 $\|\PCE_{t+1} - \POPT_{t+1}\|$ and modeling errors $\epsA, \epsB$:
 \begin{restatable}{lemma}{ceLemma}
   \label{lemma:ce}
@@ -367,8 +367,8 @@ bounds for the discrete ricatti equation in the finite
 horizon setting. Prior work~\cite{konstantinov93, mania19} has only established such
 bounds in the infinite horizon setting using fixed point analysis. Our treatment
 is significantly different as the finite horizon solution is not a fixed point.
-Our final perturbation bounds are presented in the theorem (proof in
-Appendix~\ref{sec:cert-equiv-contr-2}) below:
+Our final perturbation bounds are presented in the theorem (proof is
+given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}) below:
 \begin{restatable}{theorem}{theoremCE}
   \label{theorem:ce}
   If the cost-to-go matrices for the optimal controller and \MM{}
@@ -402,7 +402,7 @@ suboptimality of \MM{}.
 
 Our final set of results establish similar worst case cost
 suboptimality bounds for \ILC{} by first establishing a bound (proof
-in Appendix~\ref{sec:iter-learn-contr}) on the
+is given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}) on the
 difference $\|\KILC_t - \KOPT_t\|$ in terms of $\|\PILC_{t+1} -
 \POPT_{t+1}\|$ and modeling error $\epsA, \epsB$:
 \begin{restatable}{lemma}{ilcLemma}
@@ -424,7 +424,7 @@ difference $\|\KILC_t - \KOPT_t\|$ in terms of $\|\PILC_{t+1} -
 Similar to \MM{}, we need to bound the crucial term
 $\fILC_{t+1}(\epsA, \epsB)$ to bound the norm difference $\|\KOPT_t -
 \KILC_t\|$ using Lemma~\ref{lemma:ilc}. We will present perturbation
-bounds (proof in Appendix~\ref{sec:iter-learn-contr}) for the \ILC{}
+bounds (proof is given in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}) for the \ILC{}
 recursion equation given in 
 Section~\ref{sec:iter-learn-contr-1} in the finite horizon setting
 below:
@@ -700,7 +700,7 @@ better than \MM{} as indicated by equations~\eqref{eq:ce-cost}
 and~\eqref{eq:ilc-cost}. Furthermore, the conditions for stability
 under synthesized control inputs, as
 stated in Theorem~\ref{theorem:cost} (and in
-Lemma~\ref{lemma:stability} in Appendix~\ref{sec:general-results-1},) is harder to satisfy for \MM{}
+Lemma~\ref{lemma:stability} in our full paper~\cite{DBLP:journals/corr/abs-2111-09434},) is harder to satisfy for \MM{}
 when compared to \ILC{}, especially when modeling errors are large.
 
 \section{Empirical Results}
@@ -750,7 +750,7 @@ follows: $\Ahat_t = A_t + \epsilon\mathbb{I}$, $\Bhat_t = B_t +
 for any $\epsilon \geq 0$. Observe that this satisfies
 $||\Ahat_{t} - A_{t}|| \leq \epsilon$ and $||\Bhat_{t} - B_{t}|| \leq \epsilon$.
 We use a quadratic cost as specified in equation~\ref{eq:7} with matrices:
-  $Q = Q_{f} = \mathbb{I}, R = 1$ (more details in Appendix~\ref{sec:line-dynam-syst-1}).
+  $Q = Q_{f} = \mathbb{I}, R = 1$ (more details in our full paper~\cite{DBLP:journals/corr/abs-2111-09434}).
 We can solve for the optimal controller $\KOPT$ in closed form using true
 dynamics $A_{t}, B_{t}$ as specified in Section~\ref{sec:problem-setup}. We compare
 \MM{} controller $\KCE$ 
@@ -842,7 +842,7 @@ where $m$ is the mass of the pendulum, $\ell$ is the length of the pendulum, $g$
 is the acceleration due to gravity, and
 $\bar{\tau} = \max(\tau_{\min}, \min(\tau_{\max}, \tau))$ is the clipped torque
 based on torque limits (more details in
-Appendix~\ref{sec:nonl-invert-pend}). 
+our full paper~\cite{DBLP:journals/corr/abs-2111-09434}). 
 We use an approximate model of the dynamics where the mass of the pendulum is
 perturbed as $\hat{m} = m + \Delta m$.
 This results in dynamics that are nonlinearly perturbed from the true dynamics.
@@ -897,7 +897,7 @@ $(p_{x}, p_{y}, \theta)$ where $p_{x}, p_{y}$ are X, Y positions, and
 $\theta$ is the yaw of the quadrotor. The dynamics of the planar quadrotor
 is specified
 using a state vector $x \in \reals^{6}$, and control input $u \in
-\reals^{2}$ (more details in Appendix~\ref{sec:nonl-plan-quadr-1}).
+\reals^{2}$ (more details in full paper~\cite{DBLP:journals/corr/abs-2111-09434}).
 The quadrotor is flying in the presence of wind which is not captured in modeled
 dynamics, but affects the true dynamics of the quadrotor as a dispersive force
 field $(\eta p_{x}\mathbf{i} + \eta p_{y} \mathbf{j})$ resulting in

@@ -368,7 +368,7 @@ significantly worse than ILC when modeling error is significant. This analysis
 is explained in detail in Chapter~\ref{CHA:ILC} and is also presented in our
 paper~\cite{ilc}.
 
-\subsection{Task-Aware Model Learning}
+\subsection{Task-Aware Online Model Search with Misspecified Model Classes}
 \label{sec:task-aware-model}
 
 Our final contribution departs from the algorithms developed so far, and studies
@@ -382,8 +382,9 @@ small model for computational efficiency. In such a setting, finding a model
 that optimizes prediction error, as done in most of the existing work, can
 lead to poor task performance when the model is used for planning. We develop a
 model learning method \taml{} that is task-aware, i.e. optimizes completing the task
-when used for planning. We achieve this by performing derivative-free gradient
-ascent in the space of model parameters to explicitly select a model that
+when used for planning, rather than prediction error. We achieve this
+by performing derivative-free optimization in the space of model
+parameters to explicitly select a model that 
 results in a policy, upon planning, that achieves the best task performance
 during execution. To measure the performance of any policy in the
 environment without executing it, we rely on a monte-carlo evaluation procedure
@@ -412,6 +413,27 @@ Chapter~\ref{CHA:ILC} is based on joint work with Wen Sun, Max Likhachev,
 and Drew Bagnell that appeared in~\cite{ilc}.
 Chapter~\ref{CHA:TAML} is based on ongoing work with Sanjiban Choudhury, Drew
 Bagnell, and Max Likhachev.
+
+\section{Open Source Software}
+\label{sec:open-source-software}
+
+The author is a huge proponent of open sourcing research
+code. Previously open sourced code has hugely benefitted the work in
+this thesis, and the author would like to give back to the community
+by open sourcing all the code for this thesis. The links to code are
+listed below:
+\begin{enumerate}
+\item Chapter~\ref{CHA:ARS} code can be found at
+  \url{https://github.com/LAIRLAB/contrasting_exploration_rl}
+\item Chapter~\ref{CHA:CMAX} code can be found at
+  \url{https://github.com/vvanirudh/CMAX}
+\item Chapter~\ref{CHA:CMAXPP} code can be found at
+  \url{https://github.com/vvanirudh/CMAXPP}
+\item Chapter~\ref{CHA:ILC} code can be found at
+  \url{https://github.com/vvanirudh/ILC.jl}
+\item Chapter~\ref{CHA:TAML} code can be found at
+  \url{https://github.com/vvanirudh/TOMS.jl}
+\end{enumerate}
 
 \section{Excluded Research}
 \label{sec:excluded-research}

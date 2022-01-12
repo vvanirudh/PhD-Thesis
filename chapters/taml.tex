@@ -8,6 +8,34 @@
     dynamics with the goal of optimizing the planning process.}}{Rich
   Sutton and Andrew Barto (2018)}
 
+The algorithms presented in this thesis, so
+far, have not required any updates to the dynamics of the model. In
+contrast, most existing methods in the literature, such
+as~\cite{DBLP:journals/ml/KearnsS02, DBLP:journals/jmlr/BrafmanT02,
+  DBLP:conf/atal/JongS07,
+  DBLP:journals/pami/DeisenrothFR15, DBLP:conf/icml/AbbeelQN06,
+  DBLP:conf/aaai/Jiang18, rastogi2018sample}, use experience
+acquired from executions to update the dynamics of the model or learn
+a model from scratch.
+Chapters~\ref{CHA:CMAX} and~\ref{CHA:CMAXPP} have
+argued that updating the dynamics of the model requires a large amount
+of experience in large state spaces and can be at the expense of
+completing the task. While this is generally true, there are major
+advantages of updating the dynamics of the model, especially in
+domains where it
+is feasible to do it online, as it allows the planner to compute
+solutions that exploit the true dynamics and potentially result in
+solutions with very low costs. Furthermore even in application domains
+where we require a large amount of experience to update the model,
+the improvement in task performance from planning on a more accurate
+model can outweigh the executions wasted to learn true dynamics. For
+example, there might be regions in the state space where updating the
+dynamics of the model can be done efficiently while in other regions
+we can resort to methods that update the behavior of planner such as
+\cmax{} and \cmaxpp{}. This motivates a trade-off between both sets of
+approaches and understanding this trade-off can result in intelligent
+use of online experience to achieve efficient planning and
+execution.
 
 %%% Local Variables:
 %%% mode: latex

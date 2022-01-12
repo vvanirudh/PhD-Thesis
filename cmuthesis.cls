@@ -70,6 +70,7 @@
 \vskip 3em
 
 \begin{center}
+  \includegraphics[width=0.2\linewidth]{cmu-seal-r.eps} \\
     Robotics Institute \\
     School of Computer Science \\
     Carnegie Mellon University \\

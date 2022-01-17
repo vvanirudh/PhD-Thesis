@@ -391,8 +391,9 @@ environment without executing it, we rely on a monte-carlo evaluation procedure
 that uses the experience accumulated so far in
 state-action regions where we have good coverage, and fall back on an
 optimistic model everywhere else. Theoretically, we can show that given
-unlimited computation, \taml{} is guaranteed to converge to the best performing
-model in the model class. Empirically, we show that \taml{} performs
+unlimited computation, \taml{} is guaranteed to reach the goal in
+small state-action spaces as long as there is at least one good
+performing model in the model class. Empirically, we show that \taml{} performs
 significantly better than traditional model learning methods that optimize
 prediction error in a simple mountain car domain. This work is explained in
 detail in Chapter~\ref{CHA:TAML}.

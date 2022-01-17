@@ -84,14 +84,18 @@ model $\hat{f}_\theta$ results in a policy $\pi_\theta: \statespace \rightarrow
 the cost-to-go according to the cost function $c$ and transition
 dynamics $\hat{f}_\theta$. Note that we do not require $P$ to be an
 optimal planner. We will use the notation $V_\theta^{\pi_\theta}(s)$ to denote
-the cost-to-go from state $s$ using policy $\pi_\theta$ under the transition
+the cost-to-go (or state value function) from state $s$ using policy
+$\pi_\theta$ under the transition 
 dynamics given by $\hat{f}_\theta \in \mathcal{F}$. To denote the
 cost-to-go of any policy $\pi_\theta$\footnote{Note that we use the
   same parameterization $\theta$ for both policies and dynamical
   models as we only consider the class of policies that result from
   applying the planner $P$ on the dynamical model class
   $\mathcal{F}$.} in $M$ under the true dynamics $f$, we use the
-notation $V^{\pi_\theta}$. 
+notation $V^{\pi_\theta}$. Similarly, we will use the notation
+$Q_\theta^{\pi_\theta}(s, a)$ and $Q^{\pi_\theta}(s, a)$ to denote the
+state-action value function (or cost-to-go after executing action $a$
+in state $s$) in the model $\hat{f}_\theta$ and in $M$ respectively.
 
 Our method, \taml{}, relies crucially on having access to an
 optimistic dynamical model $\fopt: \statespace \times \actionspace
@@ -341,7 +345,7 @@ Algorithm~\ref{alg:evaluation}.
     \Require{Policy $\pi_\theta$, Dataset $\mathcal{D}$, start state
       $s_1$, horizon $H$, Distance metric $\Delta$, Distance threshold
       $\mu \geq 0$}
-    \State Initialize $\tilde{s} \leftarrow s_1$, $V^{\pi_\theta}(s_1)
+    \State Initialize $\tilde{s} \leftarrow s_1$, $\hat{V}^{\pi_\theta}(s_1)
     \leftarrow 0$
     \For{$t = 1$ to $H$}
     \State Compute $\tilde{a} \leftarrow \pi_\theta(\tilde{s})$
@@ -353,13 +357,13 @@ Algorithm~\ref{alg:evaluation}.
     \Else
     \State Compute $s_{t+1} \leftarrow \fopt(s_t, a_t)$
     \EndIf
-    \State $V^{\pi_\theta}(s_1) \leftarrow  V^{\pi_\theta}(s_1) + c(s_t, a_t)$,
+    \State $\hat{V}^{\pi_\theta}(s_1) \leftarrow  \hat{V}^{\pi_\theta}(s_1) + c(s_t, a_t)$,
     $\tilde{s} \leftarrow s_{t+1}$
     \If{$\tilde{s} \in \goalspace$}
     \State \textbf{break}
     \EndIf
     \EndFor \\
-    \Return{$V^{\pi_\theta}(s_1)$}
+    \Return{$\hat{V}^{\pi_\theta}(s_1)$}
   \end{algorithmic}
   \label{alg:evaluation}
 \end{algorithm}
@@ -385,9 +389,198 @@ search framework presented in Algorithm~\ref{alg:online-model-search}.
 \section{Theoretical Guarantees}
 \label{sec:theor-guar}
 
+Our first guarantee shows that using optimistic off-policy evaluation
+as done in Algorithm~\ref{alg:evaluation} always results in a
+cost-to-go estimate that is not too pessimistic. In other words, we
+have
+\begin{theorem}
+  If the state-action value function $Q^{\pi_\theta}$ is $L$-lipschitz
+  under the 
+  distance metric $\Delta$ for any policy $\pi_\theta$, then we have
+  that the estimate $\hat{V}^{\pi_\theta}$ satsfies
+  \begin{equation}
+    \label{eq:25}
+    \hat{V}^{\pi_\theta} \leq V^{\pi_\theta} + LH\mu
+  \end{equation}
+  where $H$ is the horizon, and $V^{\pi_\theta}$ is the true
+  cost-to-go of the policy $\pi_\theta$ in $M$.
+  \label{theorem:lipschitz}
+\end{theorem}
+\begin{proof}[Proof Sketch]
+  Observe that if we never use any transition in the dataset
+  $\mathcal{D}$, then we completely rely on the optimistic model
+  $\fopt$ for evaluation which by definition results in a cost-to-go
+  estimate $\hat{V}^{\pi_\theta}$ that is optimistic. Now, let's say
+  we use a transition $(s, a, s') \in \mathcal{D}$ to evaluate the
+  cost-to-go of $(\tilde{s}, \tilde{a})$, then we have that
+  \begin{align*}
+    Q^{\pi_\theta}(s, a) - Q^{\pi_\theta}(\tilde{s}, \tilde{a}) &\leq L\Delta((\tilde{s},
+                              \tilde{a}), (s, a)) \\
+    &\leq L\mu
+  \end{align*}
+  Thus, we can introduce a pessimistic error of at most $L\mu$
+  everytime we use a transition from $\mathcal{D}$. In the worst case,
+  we use $H$ transitions from $\mathcal{D}$, and thus our resulting
+  cost-to-go estimate $\hat{V}^{\pi_\theta}$ can overestimate the true
+  cost-to-go $V^{\pi_\theta}$ by $LH\mu$.
+\end{proof}
+
+The above guarantee highlights the advantage of \taml{} using an
+optimistic off-policy evaluation method. By not being severely
+pessimistic, \taml{} never discounts a policy before obtaining enough
+data to do it with certainty. This allows \taml{} to always be
+optimistic and not rely on inaccurate pessimistic value estimates. The
+potential downside of this is that we might not be exploiting the
+dataset $\mathcal{D}$ completely, but turns out collecting more data
+is not as harmful as switching to a much worse policy based on
+inaccurate evaluation as evidenced in our experiments.
+
+We can also provide a task-completeness guarantee for \taml{} in small
+state-action spaces (where we can set $\mu = 0$) when given access to
+unlimited computation (allowing us to solve the hill-climbing
+procedure in Algorithm~\ref{alg:hill-climbing} a large number of times
+to reach global minima) which is stated as follows:
+\begin{theorem}[Task Completeness]
+  In small state-action spaces \taml{}, given
+  access to unlimited computation, is guaranteed to reach a goal state
+  if there exists at least a single model in the model class
+  $\mathcal{F}$ that is good enough to result in a policy that can
+  reach the goal in $M$.
+  \label{theorem:toms-completeness}
+\end{theorem}
+\begin{proof}[Proof Sketch]
+  From Theorem~\ref{theorem:lipschitz} we have that when we set $\mu =
+  0$, the resulting cost-to-go estimates are always optimistic. Thus,
+  as the robot collects more data it either reaches the goal or
+  collects enough data to get the true cost-to-go estimate. In the
+  latter case, since we are performing exact global optimization,
+  \taml{} is guaranteed to find the best model in the model class that
+  minimizes the true cost-to-go. As long as this best model results in
+  a policy that can reach the goal, \taml{} will also reach the goal
+  by picking this model and using its corresponding policy.
+\end{proof}
+
 \section{Experiments}
 \label{sec:experiments-1}
 
+We compare \taml{} against RBMS, maximum likelihood model learning
+(MLE) and \cmax{} on a variant of the standard mountain car
+domain. This variant 
+was first introduced in~\cite{DBLP:conf/icra/JosephGRHR13}. In this
+variant of the classic mountain car (shown in
+Figure~\ref{fig:mountaincar}), there is a rock (shown in red in the
+Figure) which causes the car to decrease its speed by $c$ whenever the
+car moves across the rock in either direction. The dynamics of
+mountain car are specified as follows:
+\begin{align*}
+  x_{t+1} &= x_t + \dot{x}_t \\
+  \dot{x}_{t+1} &= \dot{x}_t + a + \theta_1\cos(\theta_2x_t)
+\end{align*}
+where $a \in \{-0.001, 0.001\}$ is the action executed. We use a
+uniform discretization of $x$ and $\dot{x}$ with a $500 \times 250$
+grid. The model class used by all approaches is $\mathcal{F} =
+\{(\theta_1, \theta_2) | \theta_1, \theta_2 \in \reals\}$. The
+environment $M$ (as shown in Figure~\ref{fig:mountaincar}) uses
+$\theta_1 = -0.0025$ and $\theta_2 = 3$ for the dynamics everywhere
+except at the rock where the velocity dynamics differ. Therefore,
+increasing $c$ corresponds to the model class $\mathcal{F}$ becoming
+increasingly misspecified. The initial position for the car is randomized
+across each trial by sampling uniformly at random from
+$[\frac{-\pi}{6} - 0.1, \frac{-\pi}{6}+0.1]$ with the initial velocity
+set to $0$. The rock is placed at $x = 0.25$ for all the trials with
+the goal at $x = 0.5$. The cost is $1$ everywhere except at the goal
+where it is $0$. We use the distance function $\Delta$ given by,
+\begin{equation}
+  \label{eq:24}
+  \Delta((s, a), (s', a')) =
+  \begin{cases}
+    \sum_{d=1}^D \frac{|s^d - s'^d|}{s^d_{max} - s^d_{min}} & \text{if
+    } a = a' \\
+    \infty & \text{otherwise}
+  \end{cases}
+\end{equation}
+For \taml{}, we use the threshold $\mu = 0.01$ as specified by the
+above distance metric.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/taml/mountaincar.png}
+  \caption{Mountain Car Domain with Rock}
+  \label{fig:mountaincar}
+\end{figure}
+
+Through our experiments, we would like to answer the following two
+questions:
+\begin{enumerate}
+\item \textit{Does using \taml{} help in reaching the goal quickly
+    despite lack of knowledge of the rock dynamics and the model class
+    being misspecified?}
+\item \textit{Does using optimistic model for off-policy evaluation
+    help in achieving better value estimates that are useful for
+    reaching the goal quickly?}
+\end{enumerate}
+
+\begin{figure}[t]
+  \centering
+\includegraphics[width=0.5\linewidth]{figures/taml/mountain_car_online_model_search_all.pdf} 
+  \caption{Performance versus misspecification on the mountain car
+    domain. We run each method over $10$ trials where the initial
+    state of the car is picked at random. We cap each trial at $3000$
+    steps.}
+  \label{fig:performance}
+\end{figure}
+
+Figure~\ref{fig:performance} answers the first question in the
+affirmative. MLE does a poor job of capturing the dynamics of the car
+near the rock as most of the data collected online corresponds to the
+dynamics as specified by $\theta_1 = -0.0025$ and $\theta_2 = 3$, and
+is not good enough for the planner $P$ to get the car over the
+rock. The performance of MLE quickly deteriorates and is not
+successful at reaching the goal in any trial by $c = 0.027$. \cmax{},
+on the other hand, does a good job and is successful at all
+misspecifications except $c = 0.03$. \cmax{} inflates the cost of any
+transition with discrepancy in dynamics around the rock until it
+executes a transition that allows the car to go beyond the rock and
+onto the goal. However, this take a large number of executions as
+evidenced by the result in
+Fiture~\ref{fig:performance}. RBMS~\cite{DBLP:conf/icra/JosephGRHR13}
+does well at small misspecifications but deteriorates for larger
+misspecifications as the data collected online does not have good
+coverage of the state-action space. This results in overly pessimistic
+and inaccurate cost-to-go evaluations that result in convergence to
+poor policies when used in model search. \taml{} does not have this
+disadvantage as it relies on the optimistic model (in this case, the
+model with $\theta_1 = -0.0025$ and $\theta_2 = 3$) in state-action
+space regions where the data does not have good coverage. This ensures
+that the cost-to-go evaluations remain optimistic and do not discount
+models quickly before we gain enough data. As a result, \taml{} does
+better than all the baselines, especially at larger misspecifications,
+when model learning is essential. For comparison, we have also
+included a baseline (in green) of the policy that is obtained by
+planning using the true model with the rock. This shows that there is
+still a large scope for improvement that one can expect by quickly
+learning the true dynamics.
+
+To answer the second question posed above, we compared \taml{} with
+optimistic off-policy evaluation with two variants that use a
+different off-policy evaluation method. The first one, termed as
+\taml{} Current, where instead of falling back on the optimistic model
+in Algorithm~\ref{alg:evaluation} we use the model $\hat{f}_\theta$
+that the evaluated policy $\pi_\theta$ is computed for. The second
+variant, termed as \taml{} Non-optimistic, uses a non-optimistic model
+$f_{\mathsf{non-opt}}$ in Algorithm~\ref{alg:evaluation} instead of the
+optimistic model. Figure~\ref{fig:evaluation} presents the results of
+this experiment.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/taml/mountain_car_online_model_search_toms.pdf}
+  \caption{Performance versus misspecification on the mountain car
+    domain. We compare \taml{} with different off-policy evaluation
+    methods to understand if using optimistic evaluation helps it
+    reach goal quickly}
+  \label{fig:evaluation}
+\end{figure}
 \section{Discussion}
 \label{sec:discussion-1}
 

@@ -1,6 +1,6 @@
 \PassOptionsToPackage{svgnames,dvipsnames}{xcolor}
 
-\documentclass[12pt]{cmuthesis}
+\documentclass[11pt]{cmuthesis}
 
 \usepackage[Lenny]{fncychap}
 \ChNameVar{\Large}
@@ -47,7 +47,7 @@
   For my brother, who put the fear of mediocrity in me \\
   For my mother, who sacrificed her own dreams to help me pursue
   mine \\
-  For my love, who always believed in me and brought me back to surface
+  For my love, who believed in me and brought me back to surface
   when I sank to the depths
 \end{dedication}
 
@@ -96,11 +96,14 @@ assumptions. Crucially, both algorithms do not require any updates to
 the dynamics of the model unlike any existing method for planning
 using inaccurate models.
 
-From a theoretical perspective, this thesis presents a sample
-complexity analysis of model-free methods and shows that their large
-worst-case sample requirements make them not practical for robotic
-tasks. Furthermore, we also present a performance analysis for methods
-that leverage inaccurate models in linearized systems with
+From a theoretical perspective,
+this thesis presents a
+%sample
+% complexity analysis of model-free methods and shows that their large
+% worst-case sample requirements make them not practical for robotic
+% tasks. Furthermore, we also present a
+performance analysis for methods
+that leverage inaccurate models in optimal control of linearized systems with
 quadratic costs. Our analysis shows that naively using inaccurate
 models can lead to large suboptimality gaps when modeling errors are
 significant, while updating the behavior of the planner during

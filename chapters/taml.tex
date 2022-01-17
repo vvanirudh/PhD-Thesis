@@ -61,7 +61,7 @@ problem is to find the least-cost path from a given start state $s_1
 \in \statespace$ to any goal state $g \in \goalspace$ in $M$. As is
 typical in shortest path problems, we assume that there exists at
 least one path from each state $s \in \statespace$ to one of the goal
-states in $\goalspace$.
+states in $\goalspace$~\cite{DBLP:books/lib/Bertsekas05}.
 
 In this work, we focus on environments $M$ with unknown transition
 dynamics $f$ and known cost function $c$. Instead we have access to a
@@ -100,7 +100,7 @@ in state $s$) in the model $\hat{f}_\theta$ and in $M$ respectively.
 Our method, \taml{}, relies crucially on having access to an
 optimistic dynamical model $\fopt: \statespace \times \actionspace
 \rightarrow \statespace$. An optimistic dynamical model satisfies
-the following assumption:
+the following assumption~\cite{cmaxpp}:
 \begin{assumption}
   For any policy $\pi$, the cost-to-go $V^\pi_\opt$ using the dynamics
   $\fopt$ underestimates the cost-to-go $V^\pi$ using the true
@@ -118,7 +118,9 @@ $\fopt$.
 \subsection{Maximum Likelihood Model Learning}
 \label{sec:maxim-likel-model}
 
-Most of the existing model learning methods use a maximum-likelihood
+Most of the existing model learning
+methods~\cite{DBLP:conf/nips/JannerFZL19,
+  DBLP:conf/icra/NagabandiKFL18, DBLP:journals/corr/abs-1907-02057} use a maximum-likelihood
 estimation objective (MLE) that optimizes prediction error to choose the best
 model $\hat{f}_\theta$ among the class $\mathcal{F}$. Given a set of
 transitions obtained from execution in $M$, $\mathcal{D} = \{(s_i, a_i,
@@ -505,7 +507,8 @@ above distance metric.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/taml/mountaincar.png}
-  \caption{Mountain Car Domain with Rock}
+  \caption{Mountain car domain with rock (in red) that decreases the
+    speed of the car by $c$}
   \label{fig:mountaincar}
 \end{figure}
 
@@ -522,7 +525,7 @@ questions:
 
 \begin{figure}[t]
   \centering
-\includegraphics[width=0.5\linewidth]{figures/taml/mountain_car_online_model_search_all.pdf} 
+\includegraphics[width=0.6\linewidth]{figures/taml/mountain_car_online_model_search_all.pdf} 
   \caption{Performance versus misspecification on the mountain car
     domain. We run each method over $10$ trials where the initial
     state of the car is picked at random. We cap each trial at $3000$
@@ -581,9 +584,50 @@ this experiment.
     reach goal quickly}
   \label{fig:evaluation}
 \end{figure}
-\section{Discussion}
+
+From the results, we can observe that \taml{} with off-policy
+evaluation where we fall back on any model that is non-optimistic
+results in poor performance in reaching the goal. This is also
+evidenced by Theorem~\ref{theorem:lipschitz} where \taml{} is
+guaranteed to not result in cost-to-go that are too pessimistic only
+if we rely on an optimistic model in regions where data is scarce. It
+is also interesting to observe that relying on the model for which the
+evaluated policy is optimal for, performs much worse than using an
+arbitrary fixed non-optimistic model. This can be attributed to the
+added inaccuracy in evaluation coming from evaluating the cost-to-go
+using an inaccurate model. 
+
+\section{Conclusion}
 \label{sec:discussion-1}
 
+In this chapter, we presented some preliminary work done in designing
+a task-aware online model search algorithm. Current model search
+approaches mostly rely on maximum likelihood learning, where the model
+is picked to minimize the prediction error and then is subsequently
+used for planning. This results in an objective mismatch which can
+result in such approaches picking a model, that while minimizing
+prediction error, can be very poor for computing a good policy. This
+is especially true in the regime of limited data which is often the
+case in online settings. To counter the objective mismatch issue,
+existing approaches such as RBMS present an offline algorithm that
+leverages an offline collected dataset of transitions executed in the
+real world to search in the model class for models that directly
+optimize task performance. However, such approaches perform poorly in
+the online setting where the collected dataset is highly correlated
+and does not have good coverage resulting in data scarcity in
+state-action regions.
+
+Our proposed approach, \taml{}, extends RBMS to the online model
+search setting by leveraging an optimistic but potentially inaccurate
+model of the real world. Using this optimistic model for off-policy
+evaluation allows \taml{} to obtain cost-to-go estimates that are not
+too pessimistic and enables it to work with online collected datasets
+that can potentially be very scarce and highly correlated. As shown in
+our experiments, \taml{} outperforms both RBMS and maximum likelihood
+learning approaches on a simple mountain car domain in the online
+setting. Furthermore our experiments also show that using an
+optimistic model in the off-policy evaluation procedure is where
+\taml{} derives most of its improvements from.
 
   
 %%% Local Variables:

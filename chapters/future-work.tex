@@ -112,7 +112,19 @@ policy in the model $M'$ and the \textit{model advantages} at each time step $V_
       objective function~\cite{DBLP:journals/arc/Ljung10,
         DBLP:conf/icml/AbbeelN05, DBLP:conf/icml/RossB12, 
   DBLP:journals/corr/abs-1907-02057} and instead use a prediction
-error loss. To understand why, let us take a
+error loss. For example, \cite{DBLP:conf/icml/RossB12} present a simple iterative
+approach for agnostic system identification with strong guarantees
+that do not scale with the size of the MDP when given access to a good
+exploration distribution. The approach is very simple to implement and
+iterates between collecting new data about the real world $M$ by executing
+a good policy under the current model $M'$ as well as by sampling from
+the exploration distribution, and updating the model with the new
+data. The model is updated by minimizing negative log likelihood of
+the data under the model.
+
+
+To understand why prediction error or maximum likelihood objective
+makes sense, let us take a
 closer look at the model advantages:
 \begin{align*}
   V_{M'}^\pi(s_{t+1}^M) - V^\pi_{M'}(f'(s_t^M, \pi(s_t^M))) &\leq
@@ -123,7 +135,47 @@ where we assumed that the value function of policy $\pi$ in the model
 $M'$ is $L$-lipschitz (any bounded function on a bounded domain is
 lipschitz.) Thus, instead of optimizing the model advantages one can
 optimize the prediction error which is an upper bound on the
-model advantage~\cite{DBLP:conf/icml/RossB12}.
+model advantage~\cite{DBLP:conf/icml/RossB12}. However, this can be a
+very weak upper bound resulting in a high sample complexity
+requirement.
+
+There are two ways to tackle this: 1) directly optimize $J_{M}(\pi)$,
+or 2) optimize the model advantages instead of prediction error. RBMS
+and \taml{} take the first way by directly optimizing $J_M(\pi)$,
+i.e. the performance of the policy in the real world $M$. The policy
+class is parameterized by the model class (and the application of
+planner $P$) and the performance of policy in $M$ is computed through
+an off-policy evaluation procedure. While this works for simple
+domains, off-policy evaluation is not always reliable as the data is
+collected under a different policy than the policy that is being
+evaluated resulting in a high variance estimate.
+
+Another option is to take the second
+way. \cite{DBLP:conf/aistats/VoloshinJY21} take this approach in the
+offline setting where given an offline collected dataset $\mathcal{D}$
+they find a model $M'$ that minimizes the model advantages as
+evaluated on $\mathcal{D}$. Once they find the best model in the model
+class, they use it for planning to obtain the policy that is then used
+for execution in the real world $M$. While this works well in offline
+settings, the online version would face similar difficulties as RBMS
+where the online collected dataset $\mathcal{D}$ might not have good
+coverage and can be highly correlated. Thus, there is a need for an
+online model learning algorithm that optimizes model advantages.
+
+The author envisions an online iterative approach similar
+to~\cite{DBLP:conf/icml/RossB12} where the model is updated with the
+new data by minimizing model advantages rather than minimizing
+negative log-likelihood. The advantage of such an approach is evident
+in domains where there are no models that capture the true dynamics
+exactly in the model class (a.k.a misspecified) but there are several
+models that are useful for planning. Using model advantages, instead
+of prediction error, allows us to distinguish models that are useful
+for planning from models that are good at capturing true dynamics.
+
+\section{Extending \cmax{} and \cmaxpp{} to Stochastic Dynamics}
+\label{sec:extend-cmax-cmaxpp}
+
+
 
 %%% Local Variables:
 %%% mode: latex

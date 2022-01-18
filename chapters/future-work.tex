@@ -7,9 +7,123 @@ work. The author has made some progress on some of these directions
 while for others, pointers are given to related work so that the
 reader can get started.
 
+\section{A Unified Framework for Planning and Execution using
+  Inaccurate Models}
+\label{sec:unified-framework}
+
+This thesis has presented two novel algorithms \cmax{} and \cmaxpp{} that update the
+behavior of the planner, rather than updating the dynamics of the
+model, to allow robots to complete the task despite using an
+inaccurate model. \cmax{} enables the planner to stick to the
+state-action space regions where the model is accurate and biases it
+away from the inaccurately modeled regions. \cmaxpp{}, on the other
+hand, learns model-free value estimates for inaccurately modeled
+transitions and integrates them into a model-based planning procedure
+with the inaccurate model. Both approaches require the inaccurate
+model to be optimistic and have task-completeness guarantees. While
+our experiments have shown that they work very well empirically, there
+are domains where designing ``good'' optimistic models is
+difficult. By good, we mean a non-trivial optimistic model (a trivial
+optimistic model would be one that predicts any transition executed by
+robot would complete the task) that is useful in most state-action
+space regions. In such domains, updating the dynamics of the model
+might be more efficient even in cases where the true dynamics does not
+lie in the model class considered. This thesis has taken preliminary
+steps in designing such an efficient model learning algorithm in
+Chapter~\ref{CHA:TAML} where we presented \taml{} that performs better
+than \cmax{} in domains where we can update the dynamics of the model
+through low-dimensional parameterizations.
+
+An important future direction would be to build upon \taml{} to design
+efficient model learning algorithms that directly optimize task
+performance and enable choosing models that are useful for planning
+rather than prediction. Initial work in this direction has been done
+in~\cite{grimm2020value, DBLP:journals/corr/abs-2106-10316,
+  DBLP:conf/icml/AyoubJSWY20, DBLP:journals/corr/abs-2106-14080,
+  DBLP:journals/corr/abs-2106-03273,
+  DBLP:journals/corr/abs-2110-02758}.
+Given such algorithms, the author envisons a
+unified framework for planning and execution where the robot, at every
+time step, chooses to either update the dynamics of the model from
+executions (using algorithms like \taml{}) or updates the behavior of
+the planner (using algorithms like \cmax{} and \cmaxpp{}.) This allows
+us to combine the advantages of both family of algorithms while
+retaining task completeness guarantees. One viable way of implementing
+this would be by using the multi-heuristic A* (MHA*)
+framework~\cite{DBLP:journals/ijrr/AineSNHL16} where we treat each
+algorithm that the robot can use as a heuristic that it can follow to
+reach the goal. This would involve maintaining a different set of
+cost-to-go estimates for \taml{}, \cmax{} and \cmaxpp{}. Intuitively,
+we prefer \cmax{} as it does not waste executions learning dynamics or
+learning model-free value estimates and quickly finds an alternative
+path. To encode this preference, we can design an anytime algorithm
+similar to \acmaxpp{} (in Section~\ref{sec:adaptive}) where if the
+cost-to-go following \cmax{} is not too worse compared to that of
+\taml{} and \cmaxpp{}, we follow \cmax{}. Else, if the cost-to-go
+following \cmaxpp{} is not too far from that of \taml{}, then we
+follow \cmaxpp{}. If neither of those are true, then we follow
+\taml{}. This encodes the preference that avoiding inaccurately
+modeled transitions is easier to learn than model-free value
+estimates which is easier to learn than the model dynamics. The goal is to create a unified
+framework where the robot, during the course of its execution,
+intelligently switches between (a) learning the true dynamics, (b)
+learning a model-free value estimate, or (c)
+biasing the planner away from an inaccurately modeled
+transition to guarantee task completeness while reducing
+the amount of real-world experience required.
 
 
+\section{Online Model Learning with Misspecified Model Classes}
+\label{sec:online-model-learn}
 
+While \taml{} was a first step in the direction of online model
+learning with misspecified model classes where we directly optimize
+task performance rather than prediction error, the author believes
+there is still a long way to go in this direction. Our main motivation
+for this comes from the simulation lemma, which was first introduced
+in~\cite{DBLP:journals/ml/KearnsS02}, and can be reformulated in the
+undiscounted deterministic dynamics setting as follows:
+\begin{lemma}[Undiscounted Deterministic Dynamics Simulation Lemma]
+  Let $M, M'$ be two Markov Decision Processes with the same cost
+  function. If we have a fixed 
+  start state $s_0$, a deterministic policy $\pi:\statespace
+  \rightarrow \actionspace$, and $M, M'$ have deterministic dynamics
+  $f, f': \statespace \times \actionspace \rightarrow
+  \statespace$. Then we have,
+  \begin{align}
+    \label{eq:23}
+    J_M(\pi) &= J_{M'}(\pi) + \sum_{t=0}^\infty c(s_t^M, \pi(s_t^M)) +
+               V_{M'}^\pi(s_{t+1}^M) - V_{M'}^\pi(s_t^M) \\
+    &= J_{M'}(\pi) + \sum_{t=0}^\infty V_{M'}^\pi(s_{t+1}^M) -
+      V^\pi_{M'}(f'(s_t^M, \pi(s_t^M)))
+  \end{align}
+  where $s_0^M = s_0$ and $s_t^M = f(s_{t-1}^M, \pi(s_{t-1}^M))$.
+\end{lemma}
+
+In the case where $M$ is the real world, and $M'$ is any dynamical
+model that we consider, the above lemma states that the performance of
+any policy $\pi$ in the real world $M$ is equal to the sum of the performance of the
+policy in the model $M'$ and the \textit{model advantages} at each time step $V_{M'}^\pi(s_{t+1}^M) -
+      V^\pi_{M'}(f'(s_t^M, \pi(s_t^M)))$. Thus, in order to find a
+      model $M'$ that captures the performance of a policy as the same
+      as that of its performance in the real world, we need to
+      minimize model advantages. However, most existing works that
+      perform maximum likelihood learning do not consider this
+      objective function~\cite{DBLP:journals/arc/Ljung10,
+        DBLP:conf/icml/AbbeelN05, DBLP:conf/icml/RossB12, 
+  DBLP:journals/corr/abs-1907-02057} and instead use a prediction
+error loss. To understand why, let us take a
+closer look at the model advantages:
+\begin{align*}
+  V_{M'}^\pi(s_{t+1}^M) - V^\pi_{M'}(f'(s_t^M, \pi(s_t^M))) &\leq
+                                                              L\|s_{t+1}^M - f'(s_t^M, \pi(s_t^M))\| \\
+  &\leq L\|f(s_t^M, \pi(s_t^M)) - f'(s_t^M, \pi(s_t^M))\|
+\end{align*}
+where we assumed that the value function of policy $\pi$ in the model
+$M'$ is $L$-lipschitz (any bounded function on a bounded domain is
+lipschitz.) Thus, instead of optimizing the model advantages one can
+optimize the prediction error which is an upper bound on the
+model advantage~\cite{DBLP:conf/icml/RossB12}.
 
 %%% Local Variables:
 %%% mode: latex

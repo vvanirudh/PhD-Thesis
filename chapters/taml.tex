@@ -12,8 +12,9 @@ The algorithms presented in this thesis, so
 far, have not required any updates to the dynamics of the model. In
 contrast, most existing methods in the literature, such
 as~\cite{DBLP:journals/ml/KearnsS02, DBLP:journals/jmlr/BrafmanT02,
-  DBLP:conf/atal/JongS07,
+  DBLP:conf/atal/JongS07, DBLP:journals/arc/Ljung10, DBLP:conf/icml/AbbeelN05,
   DBLP:journals/pami/DeisenrothFR15, DBLP:conf/icml/AbbeelQN06,
+  DBLP:conf/icml/RossB12, 
   DBLP:conf/aaai/Jiang18, rastogi2018sample}, use experience
 acquired from executions to update the dynamics of the model or learn
 a model from scratch.
@@ -119,8 +120,8 @@ $\fopt$.
 \label{sec:maxim-likel-model}
 
 Most of the existing model learning
-methods~\cite{DBLP:conf/nips/JannerFZL19,
-  DBLP:conf/icra/NagabandiKFL18, DBLP:journals/corr/abs-1907-02057} use a maximum-likelihood
+methods~\cite{DBLP:journals/arc/Ljung10, DBLP:conf/icml/AbbeelN05,
+  DBLP:conf/icml/RossB12,  DBLP:journals/corr/abs-1907-02057} use a maximum-likelihood
 estimation objective (MLE) that optimizes prediction error to choose the best
 model $\hat{f}_\theta$ among the class $\mathcal{F}$. Given a set of
 transitions obtained from execution in $M$, $\mathcal{D} = \{(s_i, a_i,

@@ -7,7 +7,10 @@ work. The author has made some progress on some of these directions
 while for others, pointers are given to related work so that the
 reader can get started.
 
-\section{A Unified Framework for Planning and Execution using
+\section{Future Work}
+\label{sec:future-work}
+
+\subsection{A Unified Framework for Planning and Execution using
   Inaccurate Models}
 \label{sec:unified-framework}
 
@@ -73,7 +76,7 @@ transition to guarantee task completeness while reducing
 the amount of real-world experience required.
 
 
-\section{Online Model Learning with Misspecified Model Classes}
+\subsection{Online Model Learning with Misspecified Model Classes}
 \label{sec:online-model-learn}
 
 While \taml{} was a first step in the direction of online model
@@ -172,10 +175,97 @@ models that are useful for planning. Using model advantages, instead
 of prediction error, allows us to distinguish models that are useful
 for planning from models that are good at capturing true dynamics.
 
-\section{Extending \cmax{} and \cmaxpp{} to Stochastic Dynamics}
+\subsection{Extending CMAX and CMAX++ to Stochastic Dynamics}
 \label{sec:extend-cmax-cmaxpp}
 
+Most robotics systems are described using deterministic
+dynamics. However, when we move to robotics with complex dynamics
+(such as contact, friction etc.) we cannot hope to capture everything
+that is relevant to dynamics within the state description. This leads
+to partial observability. An easy way to tackle this is to formulate
+the dynamics as stochastic where the stochasticity results from the
+unobserved part of the state.
 
+So far, in this thesis, we have restricted ourselves to deterministic
+dynamics (with the exception of Chapter~\ref{CHA:ARS}) for ease of
+exposition and because most of the domains we dealt with had simple
+dynamics. A natural next step would be to extend the algorithms
+introduced, such as \cmax{} and \cmaxpp{}, to systems that are
+described using stochastic dynamics. The major component that is
+needed for such an extension would be an optimal planner that can work
+with stochastic dynamics. The planners, such as RTAA* and LRTA*, are
+restricted to deterministic dynamics. The author predicts that we can
+use general MDP planners such as value iteration, policy
+iteration~\cite{sutton1998introduction} for such purposes. There are
+also more domain-specific planners that work with stochastic dynamics
+such as stochastic motion
+roadmaps~\cite{DBLP:conf/rss/AlterovitzSG07}, stochastic extended
+LQR~\cite{DBLP:journals/tase/SunBA16}, and stochastic ensemble
+simulation planning~\cite{DBLP:conf/iros/ChiangRT16}, where the
+general idea is to maximize the probability of task success given
+stochastic dynamics.
+
+In addition to using an optimal planner that can work with stochastic
+dynamics, we also need to change how a transition is classified as
+inaccurately modeled in \cmax{} and \cmaxpp{}. Rather than having a
+hard decision that is made the first time we execute the transition,
+we will have to maintain uncertainty estimates on how confident we are
+that the transition is not modeled accurately. This might incur an
+additional cost of executing the same transition more than once to
+classify it as inaccurate with certainty. Similar approaches have been
+taken in~\cite{DBLP:conf/nips/KidambiRNJ20,
+  DBLP:conf/nips/YuTYEZLFM20} to classify any transition 
+as being inaccurately modeled. Once we classify a transition as
+inaccurate, we can proceed with penalization in \cmax{} and learning a
+model-free value estimate in \cmaxpp{}.
+
+Another challenge in extending to stochastic dynamics would be
+achieving the task completeness guarantees for the stochastic versions
+of \cmax{} and \cmaxpp{}. The author envisions that by making modeling
+assumptions on the stochasticity of the dynamics, and using
+well-calibrated uncertainty estimates can result in probabilistic task
+completeness guarantees. However, this needs to be explored before
+further comments can be made.
+
+\subsection{Finite Data Performance Analysis}
+\label{sec:finite-data-perf}
+
+Our performance analysis in Chapter~\ref{CHA:ILC} analyzed the
+performance of the final controller that \ilc{} converged to. However,
+to converge to this controller, ilc{} might theoretically require a
+very large amount of rollouts in the real world leading to a large
+number of executions. While this analysis is useful in understanding
+what sort of improvements we can expect over naively using the
+inaccurate models, it is not realistic of the performance we can
+expect given a finite amount of rollouts. Having a more fine grained
+performance analysis that tracks the quality of the controller as a
+function of both modeling error and the number of rollouts performed
+so far would be much more beneficial in understanding the usefulness
+of approaches like \cmax{} and \cmaxpp{}.
+
+\section{Conclusion}
+\label{sec:conclusion-1}
+
+This thesis takes the first steps in the study of algorithms that
+achieve planning and execution using inaccurate models by updating the
+behavior of the planner, instead of updating the dynamics of the
+model. We present two novel algorithms, \cmax{} and \cmaxpp{}, that
+fit this category and also have provable guarantees on task
+completeness, i.e. given enough time the planner is bound to find a
+path to a goal state. In addition to our algorithmic contributions,
+this thesis also presents a performance analysis of such methods in a
+simple continuous linearized system setting with quadratic costs. Our
+analysis highlights the pitfalls of naively using inaccurate models
+for planning and control, and identifies a significant improvement in
+performance that can be achieved by updating the behavior of the
+planner in this setting. Finally, the thesis takes a small step in the
+alternative paradigm of updating the dynamics of the model by
+proposing a novel task-aware model learning algorithm \toms{} that updates the dynamics to
+directly optimize task performance rather than prediction error in an
+online setting where the robot has no access to resets. We conclude
+the thesis by pointing out several directions for future work
+convincing the reader that there are still a bountiful of exciting
+challenges that remain to be solved in this space.
 
 %%% Local Variables:
 %%% mode: latex

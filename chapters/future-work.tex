@@ -2,6 +2,14 @@
 \chapter{Future Work and Conclusion}
 \label{cha:future-work-concl}
 
+\epigraph{\textit{A robot
+    often has a good understanding of how its own body moves, but
+    knowledge about how other objects, especially articulated or
+    deformable objects, can be manipulated is difficult and
+    sometimes impossible to encode beforehand and is often impractical
+    to try to estimate online}}{Ron Alterovitz, Sven Koenig, Maxim
+    Likhachev (2016)}
+
 This chapter concludes the thesis by laying out directions for future
 work. The author has made some progress on some of these directions
 while for others, pointers are given to related work so that the
@@ -231,8 +239,8 @@ further comments can be made.
 \label{sec:finite-data-perf}
 
 Our performance analysis in Chapter~\ref{CHA:ILC} analyzed the
-performance of the final controller that \ilc{} converged to. However,
-to converge to this controller, ilc{} might theoretically require a
+performance of the final controller that \ILC{} converged to. However,
+to converge to this controller, \ILC{} might theoretically require a
 very large amount of rollouts in the real world leading to a large
 number of executions. While this analysis is useful in understanding
 what sort of improvements we can expect over naively using the
@@ -260,7 +268,8 @@ for planning and control, and identifies a significant improvement in
 performance that can be achieved by updating the behavior of the
 planner in this setting. Finally, the thesis takes a small step in the
 alternative paradigm of updating the dynamics of the model by
-proposing a novel task-aware model learning algorithm \toms{} that updates the dynamics to
+proposing a novel task-aware model learning algorithm \taml{} that
+updates the dynamics to 
 directly optimize task performance rather than prediction error in an
 online setting where the robot has no access to resets. We conclude
 the thesis by pointing out several directions for future work

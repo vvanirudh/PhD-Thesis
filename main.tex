@@ -18,7 +18,7 @@
 \title{{\bf Planning and Execution using Inaccurate Models with
     Provable Guarantees on Task Completeness}}
 \author{Anirudh Vemula}
-\date{January 2022}
+\date{February 2022}
 \Year{2022}
 %\trnumber{CMU-CS-19-109}
 
@@ -76,7 +76,7 @@ leverage simplified and potentially inaccurate models and
 significantly reduce the amount of real-world experience needed to
 provably guarantee that the robot completes the task.
 
-This thesis supports this argument from an algorithmic perspective
+We support this argument from an algorithmic perspective
 by presenting two novel algorithms.
 The first algorithm \cmax{} guarantees that the robot reaches the
 goal using the inaccurate model without any resets. This
@@ -112,7 +112,8 @@ suboptimality gap. The thesis concludes by exploring the paradigm of
 updating the dynamics of the model and presents an algorithm \taml{} that
 directly optimizes task performance rather than prediction error. We
 show that in the online setting where the 
-robot does not have access to any resets, \taml{} outperforms prior
+robot does not have access to any resets and collects data as it
+executes, \taml{} outperforms prior 
 works that either optimize a maximum likelihood objective or rely on
 an offline collected dataset with good coverage.
 

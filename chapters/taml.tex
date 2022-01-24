@@ -403,7 +403,7 @@ have
   that the estimate $\hat{V}^{\pi_\theta}$ satsfies
   \begin{equation}
     \label{eq:25}
-    \hat{V}^{\pi_\theta} \leq V^{\pi_\theta} + LH\mu
+    \hat{V}^{\pi_\theta}(s_1) \leq V^{\pi_\theta}(s_1) + LH\mu
   \end{equation}
   where $H$ is the horizon, and $V^{\pi_\theta}$ is the true
   cost-to-go of the policy $\pi_\theta$ in $M$.
@@ -503,7 +503,9 @@ the goal at $x = 0.5$. We use the distance function $\Delta$ given by,
 \end{equation}
 For \taml{}, we use the threshold $\mu = 0.01$ as specified by the
 above distance metric. We use a dense cost function given by $c(s) =
-(x - 0.5)^4$ for any state $s = (x, \dot{x})$ of the car.
+(x - 0.5)^4$ for any state $s = (x, \dot{x})$ of the car. We also test
+\taml{} and the baselines when we use a sparse cost function given by
+$\bar{c}(s) = 1$ for any state $s \notin \goalspace$ and $0$ otherwise.
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/taml/mountaincar.png}
@@ -527,14 +529,15 @@ questions:
   \centering
 \includegraphics[width=0.6\linewidth]{figures/taml/mountain_car_online_model_search_all_dense.pdf} 
   \caption{Performance versus misspecification on the mountain car
-    domain. We run each method over $10$ trials where the initial
+    domain with dense cost function. We run each method over $10$ trials where the initial
     state of the car is picked at random. We cap each trial at $3000$
     steps.}
   \label{fig:performance}
 \end{figure}
 
 Figure~\ref{fig:performance} answers the first question in the
-affirmative. MLE does a poor job of capturing the dynamics of the car
+affirmative. For this experiment, we use the dense cost function
+$c(s)$. MLE does a poor job of capturing the dynamics of the car
 near the rock as most of the data collected online corresponds to the
 dynamics as specified by $\theta_1 = -0.0025$ and $\theta_2 = 3$, and
 is not good enough for the planner $P$ to get the car over the
@@ -565,6 +568,35 @@ planning using the true model with the rock. This shows that there is
 still a large scope for improvement that one can expect by quickly
 learning the true dynamics.
 
+\begin{figure}[t]
+  \centering
+\includegraphics[width=0.6\linewidth]{figures/taml/mountain_car_online_model_search_all.pdf}
+  \caption{Performance versus misspecification on the mountain car
+    domain with sparse cost function. We run each method over $10$
+    trials where the initial state of the car is picked at random. We
+    cap each trial at $3000$ steps.}
+  \label{fig:sparse-performance}
+\end{figure}
+
+We perform a similar experiment, in
+Figure~\ref{fig:sparse-performance}, as above but with the sparse cost
+function $\bar{c}(s)$. Note that with the sparse cost function, the
+planning problem is difficult as we need to reason in longer horizons
+and propagate values from the goal all the way to the
+start. Furthermore, for baselines like RBMS that only rely on dataset
+$\mathcal{D}$ for evaluation, unless we have already reached the goal
+(in which case, the task is done) the estimates $\hat{V}^{\pi_\theta}$
+are completely uninformative as all policies have the same estimated
+cost-to-go. In contrast, \taml{} can still distinguish between
+good and bad policies, by falling back on the optimistic model for
+regions where we do not have data. In other words, during evaluation,
+\taml{} can utilize optimistic model dynamics to connect all the way
+to the goal and obtain informative cost-to-go estimates. Thus, as
+shown in Figure~\ref{fig:sparse-performance}, \taml{} outperforms all
+baselines in the sparse cost setting while the performance of RBMS and
+MLE have significantly deteriorated when compared to
+Figure~\ref{fig:performance}. 
+
 To answer the second question posed above, we compared \taml{} with
 optimistic off-policy evaluation with two variants that use a
 different off-policy evaluation method. The first one, termed as
@@ -574,13 +606,15 @@ that the evaluated policy $\pi_\theta$ is computed for. The second
 variant, termed as \taml{} Non-optimistic, uses a non-optimistic model
 $f_{\mathsf{non-opt}}$ in Algorithm~\ref{alg:evaluation} instead of the
 optimistic model. Figure~\ref{fig:evaluation} presents the results of
-this experiment.
+this experiment. Note that we use the dense cost function for this
+experiment, but we have obtained similar results with the sparse cost
+function as well.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/taml/mountain_car_online_model_search_toms_dense.pdf}
   \caption{Performance versus misspecification on the mountain car
-    domain. We compare \taml{} with different off-policy evaluation
+    domain with dense cost function. We compare \taml{} with different off-policy evaluation
     methods to understand if using optimistic evaluation helps it
     reach goal quickly}
   \label{fig:evaluation}

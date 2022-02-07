@@ -59,7 +59,7 @@
 \vfill
 {\large \begin{tabular}[t]{c}\@author\end{tabular}\par}
 \vfill
-%{\sc \@trnumber\par}
+{\sc \@trnumber\par}
 \smallskip
 {\large \@date\par}
 \end{center}

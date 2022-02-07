@@ -1002,44 +1002,6 @@ Figure~\ref{fig:multistep}.
 \section{Appendix for Chapter~\ref{CHA:CMAX}}
 \label{sec:append-chapt-cmax}
 
-\subsection{A Closer Look at the Assumption}
-\label{sec:closer-look-at}
-
-Assumption~\ref{assumption:core} requires that there exists at least
-one path from the \textit{current state} to a goal state that does not
-contain any transition that is known to be incorrect. In other words, it should
-hold for every time step $t$ before the robot reaches the goal. Hence,
-it is an assumption on both the quality of the approximate model and
-the execution trace (the states visted during execution) of
-\textsc{Cmax}. This makes the assumption hard to verify prior to
-execution as it is
-dependent on the operation of the algorithm under true dynamics.
-
-However, we can relax the assumption in small state spaces by using the
-\textit{model optimism} assumption from
-\citet{DBLP:conf/aaai/Jiang18}. Specifically, an optimistic model is an
-approximate model $\hat{M}$ whose optimal cost-to-go under its dynamics
-$\hat{f}$ at each state $s \in \statespace$ underestimates the optimal
-cost-to-go under true dynamics $f$. Notice that in small state spaces,
-we can afford to do full state space planning (using value iteration,
-for example) at each time step $t$, thereby obtaining the best action
-under the approximate model's optimal cost-to-go. Thus, if the initial
-approximate model $\hat{M}$ in \textsc{Cmax} is optimistic and we
-perform full state space planning at each time step $t$, then we are
-guaranteed to reach the goal. In other words, optimistic intial model
-$\hat{M}$ is \textit{sufficient} for completeness if we perform full
-state space planning at each time step.
-
-Unfortunately, performing full state space planning at each time step
-is computationally very expensive in large state spaces (or
-intractable in continuous state spaces.) Hence, we need to resort to
-limited-expansion planning or sample-based
-planning~\cite{DBLP:journals/ml/KearnsMN02} which can result in
-suboptimal actions. In these cases, model optimism is not sufficient
-anymore, and we require assumptions such as
-Assumption~\ref{assumption:core} and \ref{assumption:core-large} that
-rely on the execution trace to guarantee completeness of \textsc{Cmax}.
-
 \subsection{4D Planar Pushing Experiment Details}
 \label{sec:4d-planar-pushing}
 

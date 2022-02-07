@@ -586,9 +586,6 @@ In order to prove completeness, we assume the following:
   \label{assumption:core}
 \end{assumption}
 
-The significance of this assumption is explained in
-Appendix~\ref{sec:closer-look-at}.
-
 \begin{algorithm}[t]
   \caption{\textsc{Cmax} -- Small State Spaces}
   {\normalsize
@@ -615,33 +612,94 @@ Appendix~\ref{sec:closer-look-at}.
   \label{alg:small-state-spaces}
 \end{algorithm}
 
-% Observe that this assumption is on both the quality of the initial
-% model $\hat{M}$ and the operation of our algorithm.
-% We would like to emphasize that this assumption
-% is less restrictive than the following assumption:
-% \begin{assumption}
-%   For any state $s \in \statespace$, there always exists at least one
-%   path from $s$ to a goal state that \textit{does not contain} any
-%   incorrect state-action pairs, i.e. $(s, a) \in \incorrectset^*$.
-%   \label{assumption:strong}
-% \end{assumption}
+\paragraph{A Closer Look at the Assumption}
+\label{sec:closer-look-at-1}
 
-% It is easy to see that Assumption~\ref{assumption:strong}
-% implies Assumption~\ref{assumption:core} since for any timestep $t$,
-% $\incorrectset_t \subseteq \incorrectset^*$. We will show that
-% Assumption~\ref{assumption:core} does not imply
-% Assumption~\ref{assumption:strong} through an example: Recall the
-% motivating icy gridworld from Figure~\ref{fig:intro} and consider the
-% small icy gridworld shown in Figure~\ref{fig:search}
-% (right). Assumption~\ref{assumption:strong} is clearly violated since
-% there exists no path from robot's current state to the goal that does
-% not contain any incorrect state-action pair. However,
-% Assumption~\ref{assumption:core} is not violated since the action of
-% moving right in the robot's current state is not yet discovered to be
-% incorrect. In fact, once it executes the move right action it
-% immediately reaches the goal state since the robot slips on ice and
-% moves two cells to the right. Thus, Assumption~\ref{assumption:core}
-% does not imply Assumption~\ref{assumption:strong}.
+Observe that this assumption is on both the quality of the initial
+model $\hat{M}$ and the operation of our algorithm.
+We would like to emphasize that this assumption
+is less restrictive than the following assumption:
+\begin{assumption}
+  For any state $s \in \statespace$, there always exists at least one
+  path from $s$ to a goal state that \textit{does not contain} any
+  incorrect state-action pairs, i.e. $(s, a) \in \incorrectset^*$.
+  \label{assumption:strong}
+\end{assumption}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/cmax/example.pdf}
+  \caption{A small icy gridworld where Assumption~\ref{assumption:core} is
+    satisfied but Assumption~\ref{assumption:strong} is not satisfied.}
+  \label{fig:example}
+\end{figure}
+
+It is easy to see that Assumption~\ref{assumption:strong}
+implies Assumption~\ref{assumption:core} since for any timestep $t$,
+$\incorrectset_t \subseteq \incorrectset^*$. We will show that
+Assumption~\ref{assumption:core} does not imply
+Assumption~\ref{assumption:strong} through an example: Recall the
+motivating icy gridworld from Figure~\ref{fig:intro} and consider the
+small icy gridworld shown in Figure~\ref{fig:example}
+(right). Assumption~\ref{assumption:strong} is clearly violated since
+there exists no path from robot's current state to the goal that does
+not contain any incorrect state-action pair. However,
+Assumption~\ref{assumption:core} is not violated since the action of
+moving right in the robot's current state is not yet discovered to be
+incorrect. In fact, once it executes the move right action it
+immediately reaches the goal state since the robot slips on ice and
+moves two cells to the right. Thus, Assumption~\ref{assumption:core}
+does not imply Assumption~\ref{assumption:strong}.
+
+Assumption~\ref{assumption:core} requires that there exists at least
+one path from the \textit{current state} to a goal state that does not
+contain any transition that is known to be incorrect. In other words, it should
+hold for every time step $t$ before the robot reaches the goal. Hence,
+it is an assumption on both the quality of the approximate model and
+the execution trace (the states visted during execution) of
+\textsc{Cmax}. This makes the assumption hard to verify prior to
+execution as it is
+dependent on the operation of the algorithm under true dynamics.
+
+We can also interpret this assumption as a variant of the \textit{optimistic
+  model} assumption that is presented in Section~\ref{sec:guarantees} and is
+introduced in~\cite{DBLP:conf/aaai/Jiang18}. Specifically, an optimistic model
+is an approximate model $\hat{M}$ whose optimal cost-to-go under its dynamics
+$\hat{f}$ at every state $s \in \statespace$ underestimates teh optimal
+cost-to-go under true dynamics $f$. A popular example of the optimistic model
+assumption is the free space assumption~\cite{DBLP:journals/trob/Zelinsky92}
+that is typically used in tasks
+involving navigation in unknown environments, where we assume that any unknown
+region in the map is free of obstacles. Assumption~\ref{assumption:core} can be
+interpreted as requiring that the model $\hat{M}_{t}$ remains optimistic in
+Algorithm~\ref{alg:small-state-spaces} until the robot reaches the goal.
+Unfortunately, this interpretation does not make the assumption easier to verify
+prior to execution as it still depends on the execution trace of \cmax{}.
+
+% However, we can relax the assumption in small state spaces by using the
+% \textit{model optimism} assumption from
+% \citet{DBLP:conf/aaai/Jiang18}. Specifically, an optimistic model is an
+% approximate model $\hat{M}$ whose optimal cost-to-go under its dynamics
+% $\hat{f}$ at each state $s \in \statespace$ underestimates the optimal
+% cost-to-go under true dynamics $f$. Notice that in small state spaces,
+% we can afford to do full state space planning (using value iteration,
+% for example) at each time step $t$, thereby obtaining the best action
+% under the approximate model's optimal cost-to-go. Thus, if the initial
+% approximate model $\hat{M}$ in \textsc{Cmax} is optimistic and we
+% perform full state space planning at each time step $t$, then we are
+% guaranteed to reach the goal. In other words, optimistic intial model
+% $\hat{M}$ is \textit{sufficient} for completeness if we perform full
+% state space planning at each time step.
+
+% Unfortunately, performing full state space planning at each time step
+% is computationally very expensive in large state spaces (or
+% intractable in continuous state spaces.) Hence, we need to resort to
+% limited-expansion planning or sample-based
+% planning~\cite{DBLP:journals/ml/KearnsMN02} which can result in
+% suboptimal actions. In these cases, model optimism is not sufficient
+% anymore, and we require assumptions such as
+% Assumption~\ref{assumption:core} and \ref{assumption:core-large} that
+% rely on the execution trace to guarantee completeness of \textsc{Cmax}.
 
 % To establish
 % guarantees on completeness and performance of our algorithm, we will
@@ -1697,7 +1755,9 @@ of what is lacking in the model, and a large number of online
 executions to correct it. For example, to learn accurate dynamics for a transition
 in $N$-D statespace we need at least $N$ samples in the worst case,
 whereas our approach needs only $1$ sample to observe a discrepancy
-and inflate the cost. The most important shortcomings of \textsc{Cmax}
+and inflate the cost.
+
+The most important shortcomings of \textsc{Cmax}
 are
 Assumptions~\ref{assumption:core} and \ref{assumption:core-large},
 which are hard to verify, and are not satisfied in several real world

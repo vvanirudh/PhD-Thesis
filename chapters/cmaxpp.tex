@@ -647,7 +647,9 @@ location. However, if there truly is an obstacle at some location,
 then the model can either have an obstacle or not have one at the same
 location. Put simply, an agent that is planning using the model should
 never be ``pleasantly surprised" by what it sees in the
-environment. Several other intuitive examples are presented
+environment. This example is popularly known as the free space
+assumption~\cite{DBLP:journals/trob/Zelinsky92} in robot navigation literature.
+Several other toy examples of the optimistic model assumption are presented
 in~\cite{DBLP:conf/aaai/Jiang18} and we recommend the reader to look
 at them for more intuition.
 
@@ -1172,10 +1174,25 @@ $\{\alpha_i\}$ as long as it is non-increasing.
 % sequence $\{\alpha_i\}$.)
 % See Appendix for sensitivity experiments demonstrating the robustness
 % of \acmaxpp{} performance with choice of sequence $\{\alpha_i\}$.
+
 Note that Assumption~\ref{assumption:cmaxpp} can
-be restrictive for tasks where designing an initial optimistic
+be restrictive for tasks where designing a initial optimistic
 model requires extensive domain
-knowledge. However, it is infeasible to relax this assumption further
+knowledge. We have seen examples of domains where this
+assumption is satisfied in the experiments, where we performed pick and place of
+an object with the model assuming that it is light weight, and navigation
+assuming that there are no icy patches. One can construct other such examples
+where optimism is easy to build in to the model. For example, for a planar
+pushing task the model can assume that there is no friction between the object
+and the surface, when in reality there is friction. Once again, this results in
+an optimistic model which allows the use of \cmaxpp{}. One can always construct
+a naive optimistic model $M_{\mathsf{naive}}$ for any robotic task which simply
+predicts that any action in any state results in the robot reaching the goal.
+But using $M_{\mathsf{naive}}$, \cmaxpp{} simply degrades to Q-learning and
+loses its goal-driven behavior from the lack of information in the model. Thus,
+there is always a tradeoff in ensuring that the model is optimistic and ensuring
+that the model is accurate, which can be a burden on the practitioner. However,
+it is infeasible to avoid this tradeoff
 without resorting to global undirected exploration
 techniques~\cite{Thrun-1992-15850}, which are highly sample
 inefficient, to ensure completeness.
